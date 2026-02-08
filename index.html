@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Illinois Housing Legislation Tracker - Impact for Equity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Gotham', 'Montserrat', sans-serif;
+      background-color: #f8f9fa;
+      min-height: 100vh;
+    }
+    
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #005a8c 0%, #007bb8 100%);
+      color: white;
+      padding: 48px 24px;
+      text-align: center;
+    }
+    
+    .header-content {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .logo-bars {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .logo-bar {
+      width: 8px;
+      height: 32px;
+      border-radius: 2px;
+    }
+    
+    .logo-bar.orange { background-color: #e98300; }
+    .logo-bar.white { background-color: white; }
+    
+    .logo-text {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    
+    .header h1 {
+      font-size: 42px;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.5px;
+    }
+    
+    .header p {
+      font-size: 18px;
+      opacity: 0.9;
+      margin: 0 auto;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    
+    /* Stats Bar */
+    .stats-bar {
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 20px 24px;
+    }
+    
+    .stats-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+    }
+    
+    .stat-number.blue { color: #005a8c; }
+    .stat-number.orange { color: #e98300; }
+    .stat-number.red { color: #c62828; }
+    .stat-number.gray { color: #6b7280; }
+    
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    /* Filters */
+    .filters {
+      background: white;
+      padding: 24px;
+      border-bottom: 1px solid #e0e0e0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .filters-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-label {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .filter-select {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      font-size: 14px;
+      background-color: white;
+      cursor: pointer;
+      min-width: 160px;
+      color: #333;
+      font-family: inherit;
+    }
+    
+    .filter-select:focus {
+      outline: none;
+      border-color: #005a8c;
+    }
+    
+    .clear-filters-btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      background-color: #ffebee;
+      color: #c62828;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 500;
+      font-family: inherit;
+      display: none;
+    }
+    
+    .clear-filters-btn.visible {
+      display: inline-block;
+    }
+    
+    .filter-count {
+      margin-left: auto;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    /* Main Grid */
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .legislation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 24px;
+    }
+    
+    /* Bill Card */
+    .bill-card {
+      background-color: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid #e8e8e8;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .bill-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    
+    .card-header-bar {
+      height: 8px;
+    }
+    
+    .card-header-bar.endorsed {
+      background: linear-gradient(90deg, #005a8c, #007bb8);
+    }
+
+    .card-header-bar.sponsored {
+      background: linear-gradient(90deg, #e98300, #f5a623);
+    }
+
+    .card-header-bar.opposed {
+      background: linear-gradient(90deg, #c62828, #e53935);
+    }
+    
+    .card-body {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .card-tags {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .tag {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .tag.endorsed {
+      background-color: #e3f2fd;
+      color: #0d47a1;
+    }
+
+    .tag.sponsored {
+      background-color: #fff3e0;
+      color: #e65100;
+    }
+
+    .tag.opposed {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+    
+    .tag.category {
+      background-color: #f5f5f5;
+      color: #666;
+      font-weight: 600;
+    }
+    
+    .bill-number {
+      font-size: 22px;
+      font-weight: 700;
+      color: #005a8c;
+      margin: 0 0 8px 0;
+    }
+    
+    .bill-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 12px 0;
+      line-height: 1.4;
+    }
+    
+    .bill-description {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+      margin: 0 0 16px 0;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+    
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .session-year {
+      font-size: 13px;
+      color: #999;
+      font-weight: 500;
+    }
+
+    .card-ilga-link {
+      font-size: 13px;
+      color: #005a8c;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .card-ilga-link:hover {
+      text-decoration: underline;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: #666;
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .empty-state h3 {
+      margin: 0 0 8px 0;
+      color: #333;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal-overlay.visible {
+      display: flex;
+    }
+    
+    .modal {
+      background-color: white;
+      border-radius: 16px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 85vh;
+      overflow: auto;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+      color: white;
+      padding: 32px;
+      position: relative;
+    }
+    
+    .modal-header.endorsed {
+      background: linear-gradient(135deg, #005a8c 0%, #007bb8 100%);
+    }
+
+    .modal-header.sponsored {
+      background: linear-gradient(135deg, #e98300 0%, #f5a623 100%);
+    }
+
+    .modal-header.opposed {
+      background: linear-gradient(135deg, #c62828 0%, #e53935 100%);
+    }
+    
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      color: white;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-tags {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .modal-tag {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background-color: rgba(255,255,255,0.2);
+      letter-spacing: 0.5px;
+    }
+    
+    .modal-bill-number {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+    
+    .modal-bill-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0;
+      opacity: 0.95;
+    }
+    
+    .modal-body {
+      padding: 32px;
+    }
+    
+    .modal-info-boxes {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    
+    .info-box {
+      padding: 12px 16px;
+      border-radius: 8px;
+    }
+    
+    .info-box-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    
+    .info-box-value {
+      font-weight: 600;
+    }
+    
+    .info-box.session {
+      background-color: #f8f9fa;
+      border: 1px solid #e8e8e8;
+    }
+    
+    .info-box.session .info-box-value {
+      color: #333;
+    }
+    
+    .modal-summary-label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #666;
+      margin: 0 0 12px 0;
+    }
+    
+    .modal-summary {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #444;
+      margin: 0;
+    }
+    
+    .modal-actions {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background-color: #005a8c;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    
+    .btn-secondary {
+      padding: 12px 20px;
+      background-color: #f5f5f5;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    
+    /* Footer */
+    .footer {
+      background-color: #005a8c;
+      color: white;
+      padding: 48px 24px;
+      margin-top: 48px;
+    }
+    
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .footer-logo-bars {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .footer-logo-bar {
+      width: 6px;
+      height: 24px;
+      border-radius: 2px;
+    }
+    
+    .footer-tagline {
+      margin: 0;
+      opacity: 0.8;
+      font-size: 14px;
+    }
+    
+    .footer-address {
+      text-align: right;
+    }
+    
+    .footer-address p {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    
+    .footer-address p:last-child {
+      margin: 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 28px;
+      }
+      
+      .stats-container {
+        gap: 24px;
+      }
+      
+      .stat-number {
+        font-size: 24px;
+      }
+      
+      .filters-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .filter-select {
+        width: 100%;
+      }
+      
+      .filter-count {
+        margin-left: 0;
+        text-align: center;
+      }
+      
+      .legislation-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .footer-address {
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>Illinois Housing Legislation</h1>
+      <p>Tracking bills that expand affordable housing, reform zoning, and promote housing equity across Illinois</p>
+    </div>
+  </header>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stats-container">
+      <div class="stat-item">
+        <div class="stat-number blue" id="total-bills">0</div>
+        <div class="stat-label">Bills Tracked</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number blue" id="endorsed-bills">0</div>
+        <div class="stat-label">Endorsed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number orange" id="sponsored-bills">0</div>
+        <div class="stat-label">Sponsored</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number red" id="opposed-bills">0</div>
+        <div class="stat-label">Opposed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filters-container">
+      <span class="filter-label">Filter by:</span>
+
+      <select class="filter-select" id="status-filter">
+        <option value="All">All Statuses</option>
+        <option value="Passed into law">Passed into law</option>
+        <option value="Not passed into law">Not passed into law</option>
+      </select>
+
+      <select class="filter-select" id="type-filter">
+        <option value="All">All Types</option>
+        <option value="Endorsed">Endorsed</option>
+        <option value="Sponsored">Sponsored</option>
+        <option value="Opposed">Opposed</option>
+      </select>
+
+      <select class="filter-select" id="year-filter">
+        <option value="All">All Years</option>
+        <option value="2026">2026</option>
+        <option value="2025">2025</option>
+      </select>
+      
+      <button class="clear-filters-btn" id="clear-filters">Clear Filters</button>
+      
+      <span class="filter-count" id="filter-count">Showing 0 of 0 bills</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="legislation-grid" id="legislation-grid">
+      <!-- Cards will be inserted here -->
+    </div>
+    
+    <div class="empty-state" id="empty-state" style="display: none;">
+      <div class="empty-state-icon">📭</div>
+      <h3>No bills match your filters</h3>
+      <p>Try adjusting your filter criteria</p>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header" id="modal-header">
+        <button class="modal-close-btn" id="modal-close">×</button>
+        <div class="modal-tags" id="modal-tags"></div>
+        <h2 class="modal-bill-number" id="modal-bill-number"></h2>
+        <h3 class="modal-bill-title" id="modal-bill-title"></h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-info-boxes">
+          <div class="info-box" id="modal-status-box">
+            <div class="info-box-label">Status</div>
+            <div class="info-box-value" id="modal-status"></div>
+          </div>
+          <div class="info-box session">
+            <div class="info-box-label">Session</div>
+            <div class="info-box-value" id="modal-session"></div>
+          </div>
+        </div>
+        <h4 class="modal-summary-label">Summary</h4>
+        <p class="modal-summary" id="modal-summary"></p>
+        <div class="modal-actions">
+          <a class="btn-primary" id="modal-link" href="#" target="_blank" rel="noopener noreferrer">View on ILGA.gov →</a>
+          <button class="btn-secondary" id="modal-close-btn">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // Legislation Data - IFE Endorsed, Sponsored, and Opposed Bills
+    const legislationData = [
+      // 2025 Session — Endorsed
+      { id: 1, billNumber: "HB3466", title: "Affordable Housing Special Assessment Program (AHSAP)", description: "Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Details IHDA's responsibility in calculating/sharing minimum per sq. ft. expenditure requirements for rehabilitation to qualify. Extends AHSAP to 2037.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Property Taxes", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3466&DocTypeID=HB&LegId=162109&SessionID=114" },
+      { id: 2, billNumber: "SB1911", title: "Affordable Housing Special Assessment Program (Senate)", description: "Senate companion to HB3466. Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Extends AHSAP to 2037. Governor approved 12/12/25.", year: [2025], status: "Passed into law", type: "Endorsed", category: "Property Taxes", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1911&DocTypeID=SB&LegId=161199&SessionID=114" },
+      { id: 3, billNumber: "SB0062", title: "Build Illinois Homes Tax Credit Act", description: "Creates the Build Illinois Homes Tax Credit Act. Qualified developments are low-income housing projects. Upon construction or rehabilitation, IHDA or DOH issues state credit eligibility statements. Allows qualified taxpayers to be awarded tax credits for their development if necessary for financial feasibility. Would create a state match to the federal Low Income Housing Tax Credit.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Affordable Housing Development", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=62&DocTypeID=SB&LegId=157167&SessionID=114" },
+      { id: 4, billNumber: "HB2545", title: "AHPAA Supportive Housing Amendment", description: "Amends Affordable Housing Planning and Appeals Act. Allows for a broader range of parties to appeal decisions and clarifies timeline for appeals and responses, consequences of failing to respond, and the municipality's burden in responding. Shifts burden of proof onto municipality to demonstrate that a proposed supportive housing project would be detrimental.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "AHPAA", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2545&DocTypeID=HB&LegId=160392&SessionID=114" },
+      { id: 5, billNumber: "HB1814", title: "Missing Middle Housing Act", description: "Amends zoning division of IL Municipal Code. Requires large cities to allow middle housing development on large lots zoned residential. Requires smaller cities to allow development of at least duplexes on lots allowing detached single family dwellings. Prohibits applicable municipalities from discouraging development or regulating development in an inconsistent manner.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1814&DocTypeID=HB&LegId=159270&SessionID=114" },
+      { id: 6, billNumber: "HB1813", title: "ADU Authorization Act", description: "Amends the Control Over Building and Construction Article of the IL Municipal Code. Defines accessory dwelling unit and efficiency unit. Prohibits municipalities from prohibiting the building or use of ADUs and prohibits home rule units from acting inconsistently with the Act.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1813&DocTypeID=HB&LegId=159269&SessionID=114" },
+      { id: 7, billNumber: "HB3552", title: "Local Accessory Dwelling Unit Act", description: "Creates Local Accessory Dwelling Unit Act. Defines accessory dwelling unit, types of units, and discretionary review. Prohibits local governments from prohibiting the building or use of ADUs and sets requirements for ADU application review, timelines, delays, and processing. Prohibits home rule units from acting inconsistently with the Act.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3552&DocTypeID=HB&LegId=162242&SessionID=114" },
+      { id: 8, billNumber: "HB1843", title: "Family Status Housing Protection Act", description: "Amends the Zoning Division of the IL Municipal Code. Disallows classification, regulation, and restriction on use of property based on family relationship. Prohibits municipalities from adopting zoning regulations that prohibit 2 or more unrelated people from living together, and regulations that prohibit community-integrated living arrangements.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1843&DocTypeID=HB&LegId=159333&SessionID=114" },
+      { id: 9, billNumber: "HB3288", title: "Affordable Communities Act", description: "Creates the Affordable Communities Act. Clarifies and defines middle housing types. Applies to zoning units with populations over 100,000 and prohibits regulations from preventing middle housing development. Requires these zoning units to adopt land use ordinances and amend zoning maps/ordinances to implement middle housing requirements. Allows IHDA to adopt emergency rules for implementing the Act's requirements.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3288&DocTypeID=HB&LegId=161778&SessionID=114" },
+      { id: 10, billNumber: "HB1429", title: "Bill of Rights for the Homeless Act Amendment", description: "Amends the Bill of Rights for the Homeless Act. Prohibits state and local government from passing rules that fine or criminally penalize people experiencing unsheltered homelessness for engaging in life-sustaining activities (like eating, keeping belongings, and sleeping) on public property. Requires written and oral notice to be given prior to removal at a site. Makes unsheltered homelessness an affirmative defense to charges of violating rules that criminalize occupying or engaging in life-sustaining activities.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1429&DocTypeID=HB&LegId=157430&SessionID=114" },
+      { id: 11, billNumber: "SB2264", title: "Crime-Free and Nuisance Housing Ordinances Regulation", description: "Amends the Counties Code, IL Municipal Code, and Housing Authorities Act. Prohibits counties, municipalities, and housing authorities from adopting, enforcing, or implementing regulations affecting a tenancy because of contact with law enforcement or emergency services. Eliminates unfair penalties and evictions of tenants based on alleged criminal or nuisance activity.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Tenant Protections", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2264&DocTypeID=SB&LegId=162041&SessionID=114" },
+      { id: 12, billNumber: "HB3256", title: "People Over Parking Act", description: "Creates the People Over Parking Act. Defines various development projects and parking requirements. Prohibits minimum automobile parking requirements if a project is within 1/2 mile of a public transportation hub. Allows local governments to impose requirements for parking spaces if a project provides parking voluntarily. Prohibits home rule units from acting inconsistently.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3256&DocTypeID=HB&LegId=161742&SessionID=114" },
+      { id: 13, billNumber: "SB2352", title: "People Over Parking Act (Senate)", description: "Senate companion to HB3256. Creates the People Over Parking Act. Prohibits minimum automobile parking requirements if a project is within 1/2 mile of a public transportation hub.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2352&DocTypeID=SB&LegId=162316&SessionID=114" },
+      { id: 14, billNumber: "SB2111", title: "Vehicle Code - Bicycles Exemptions", description: "Amends the IL Vehicle Code. People riding a bike on the road are not prohibited from side-by-side riding, riding contraflow on one-way streets, and rolling through stop signs at clear intersections. Governor approved 12/16/25.", year: [2025], status: "Passed into law", type: "Endorsed", category: "Transportation", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2111&DocTypeID=SB&LegId=161644&SessionID=114" },
+      { id: 15, billNumber: "HB3438", title: "Transportation Reform Bill", description: "Amends DOT Law of the Civil Admin Code of IL. Amends the Regional Transportation Authority Act, creates the Northern IL Transit Authority, generally acts as the transit reform bill with funding. Includes the People Over Parking Act provisions.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Transportation", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3438&DocTypeID=HB&LegId=162067&SessionID=114" },
+      // 2026 Session — New Bills
+      { id: 16, billNumber: "HB4377", title: "PHA - No Work Requirements", description: "Amends Housing Authorities Act. Unless otherwise required by federal law or regulation, prohibits housing authorities from establishing time limits and work requirements as conditions of eligibility for rent subsidy or assistance. Housing authorities may encourage participation in voluntary employment or job training if it does not impact eligibility.", year: [2026], status: "Not passed into law", type: "Sponsored", category: "Public Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4377&GAID=18&DocTypeID=HB&LegId=164950&SessionID=114" },
+      { id: 17, billNumber: "SB3084", title: "PHA - No Work Requirements (Senate)", description: "Senate companion to HB4377. Amends Housing Authorities Act. Unless otherwise required by federal law or regulation, prohibits housing authorities from establishing time limits and work requirements as conditions of eligibility for rent subsidy or assistance.", year: [2026], status: "Not passed into law", type: "Sponsored", category: "Public Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=3084&GAID=18&DocTypeID=SB&LegId=165665&SessionID=114" },
+      { id: 18, billNumber: "HB4413", title: "Revenue - Affordable Housing", description: "Amends IL Housing Dev. Act and IL Income Tax Act. Credits awarded under affordable housing tax donation program is limited in 2027 and will increase by 10% each year after. Affordable housing donation income tax credit applies through taxable year ending 2036.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Affordable Housing Development", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4413&GAID=18&DocTypeID=HB&LegId=165058&SessionID=114" },
+      { id: 19, billNumber: "SB3169", title: "Revenue - Affordable Housing (CLT)", description: "Amends Hotel Operators' Occupation Tax Act. Imposes a tax upon hosting platforms that facilitate renting, leasing, or letting of short-term rentals. Proceeds shall be deposited in the Community Land Trust Fund. Property owned by a nonprofit community land trust used exclusively for creation and maintenance of permanently affordable residences is exempt from property tax.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Affordable Housing Development", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=3169&GAID=18&DocTypeID=SB&LegId=165814&SessionID=114" },
+      { id: 20, billNumber: "HB4510", title: "Missing Middle Housing Affordability Act", description: "Creates the Missing Middle Housing Affordability Act.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4510&GAID=18&DocTypeID=HB&LegId=165295&SessionID=114" },
+      { id: 21, billNumber: "HB4568", title: "Home Illinois Program ($352M)", description: "Appropriates $352,200,000 from the General Revenue Fund to DHS for grants and administrative expenses of the Home Illinois Program, including pilot programs to prevent and end homelessness, including homelessness prevention, emergency and transitional housing, rapid rehousing, outreach, and related services and supports.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4568&GAID=18&DocTypeID=HB&LegId=165428&SessionID=114" },
+      { id: 22, billNumber: "SB2969", title: "Home Illinois Program (Senate)", description: "Senate companion to HB4568. Appropriates $352,200,000 from the General Revenue Fund to DHS for grants and administrative expenses of the Home Illinois Program to prevent and end homelessness.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=2969&GAID=18&DocTypeID=SB&LegId=165401&SessionID=114" },
+      { id: 23, billNumber: "SB3165", title: "Housing is Recovery Program ($10M)", description: "Appropriates $10,000,000 from the General Revenue Fund to DHS for the Housing is Recovery Program to support rental assistance for individuals with mental health and substance use challenges who are experiencing homelessness.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=3165&GAID=18&DocTypeID=SB&LegId=165810&SessionID=114" },
+      { id: 24, billNumber: "HB4588", title: "Parking - High Population Cities", description: "Amends the People Over Parking Act. Provides that the Act applies to municipalities with a population of more than 2 million, rather than all units of local government. Would weaken the People Over Parking Act by limiting its scope.", year: [2026], status: "Not passed into law", type: "Opposed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4588&GAID=18&DocTypeID=HB&LegId=165448&SessionID=114" },
+      { id: 25, billNumber: "SB3009", title: "Neighborhood Housing ($5M)", description: "Appropriates $5,000,000 from the General Revenue Fund to the Department of Commerce and Economic Opportunity for a grant to Neighborhood Housing Services of Chicago for costs associated with funding equitable mortgage lending and homebuyer subsidies, foreclosure prevention services, and other support.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=3009&GAID=18&DocTypeID=SB&LegId=165513&SessionID=114" }
+    ];
+
+    // Status styling configuration
+    const statusConfig = {
+      "Passed into law": { bg: "#e8f5e9", text: "#1b5e20", border: "#81c784" },
+      "Not passed into law": { bg: "#f5f5f5", text: "#616161", border: "#bdbdbd" }
+    };
+
+    // State
+    let currentFilters = {
+      status: "All",
+      type: "All",
+      year: "All"
+    };
+
+    // DOM Elements
+    const grid = document.getElementById('legislation-grid');
+    const emptyState = document.getElementById('empty-state');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const statusFilter = document.getElementById('status-filter');
+    const typeFilter = document.getElementById('type-filter');
+    const yearFilter = document.getElementById('year-filter');
+    const clearFiltersBtn = document.getElementById('clear-filters');
+    const filterCount = document.getElementById('filter-count');
+
+    // Initialize
+    function init() {
+      updateStats();
+      renderCards();
+      setupEventListeners();
+    }
+
+    function updateStats() {
+      document.getElementById('total-bills').textContent = legislationData.length;
+      document.getElementById('endorsed-bills').textContent = legislationData.filter(b => b.type === 'Endorsed').length;
+      document.getElementById('sponsored-bills').textContent = legislationData.filter(b => b.type === 'Sponsored').length;
+      document.getElementById('opposed-bills').textContent = legislationData.filter(b => b.type === 'Opposed').length;
+    }
+
+    function getFilteredData() {
+      return legislationData.filter(bill => {
+        if (currentFilters.status !== "All" && bill.status !== currentFilters.status) return false;
+        if (currentFilters.type !== "All" && bill.type !== currentFilters.type) return false;
+        if (currentFilters.year !== "All" && !bill.year.includes(parseInt(currentFilters.year))) return false;
+        return true;
+      });
+    }
+
+    function getYearDisplay(yearArr) {
+      if (yearArr.length === 1) return yearArr[0] + ' Session';
+      return yearArr.join(' / ') + ' Session';
+    }
+
+    function renderCards() {
+      const filtered = getFilteredData();
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyState.style.display = 'block';
+        grid.style.display = 'none';
+      } else {
+        emptyState.style.display = 'none';
+        grid.style.display = 'grid';
+
+        filtered.forEach(bill => {
+          const card = createCard(bill);
+          grid.appendChild(card);
+        });
+      }
+
+      filterCount.textContent = `Showing ${filtered.length} of ${legislationData.length} bills`;
+
+      // Update clear filters button visibility
+      const hasFilters = Object.values(currentFilters).some(v => v !== "All");
+      clearFiltersBtn.classList.toggle('visible', hasFilters);
+    }
+
+    function createCard(bill) {
+      const card = document.createElement('article');
+      card.className = 'bill-card';
+      card.onclick = () => openModal(bill);
+
+      const statusStyle = statusConfig[bill.status] || { bg: '#f5f5f5', text: '#666', border: '#ddd' };
+      const typeClass = bill.type.toLowerCase();
+
+      card.innerHTML = `
+        <div class="card-header-bar ${typeClass}"></div>
+        <div class="card-body">
+          <div class="card-tags">
+            <span class="tag ${typeClass}">${bill.type}</span>
+            <span class="tag category">${bill.category}</span>
+          </div>
+          <h3 class="bill-number">${bill.billNumber}</h3>
+          <h4 class="bill-title">${bill.title}</h4>
+          <p class="bill-description">${bill.description}</p>
+          <div class="card-footer">
+            <span class="status-badge" style="background-color: ${statusStyle.bg}; color: ${statusStyle.text}; border: 1px solid ${statusStyle.border};">${bill.status}</span>
+            <span class="session-year">${getYearDisplay(bill.year)}</span>
+          </div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    function openModal(bill) {
+      const typeClass = bill.type.toLowerCase();
+      const statusStyle = statusConfig[bill.status] || { bg: '#f5f5f5', text: '#666', border: '#ddd' };
+
+      document.getElementById('modal-header').className = `modal-header ${typeClass}`;
+      document.getElementById('modal-tags').innerHTML = `
+        <span class="modal-tag">${bill.type}</span>
+        <span class="modal-tag">${bill.category}</span>
+      `;
+      document.getElementById('modal-bill-number').textContent = bill.billNumber;
+      document.getElementById('modal-bill-title').textContent = bill.title;
+
+      const statusBox = document.getElementById('modal-status-box');
+      statusBox.style.backgroundColor = statusStyle.bg;
+      statusBox.style.border = `1px solid ${statusStyle.border}`;
+      document.getElementById('modal-status').textContent = bill.status;
+      document.getElementById('modal-status').style.color = statusStyle.text;
+
+      document.getElementById('modal-session').textContent = getYearDisplay(bill.year) + ' — Illinois General Assembly';
+      document.getElementById('modal-summary').textContent = bill.description;
+
+      document.getElementById('modal-link').href = bill.url;
+
+      modalOverlay.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+
+    function setupEventListeners() {
+      statusFilter.addEventListener('change', (e) => {
+        currentFilters.status = e.target.value;
+        renderCards();
+      });
+
+      typeFilter.addEventListener('change', (e) => {
+        currentFilters.type = e.target.value;
+        renderCards();
+      });
+
+      yearFilter.addEventListener('change', (e) => {
+        currentFilters.year = e.target.value;
+        renderCards();
+      });
+
+      clearFiltersBtn.addEventListener('click', () => {
+        currentFilters = { status: "All", type: "All", year: "All" };
+        statusFilter.value = "All";
+        typeFilter.value = "All";
+        yearFilter.value = "All";
+        renderCards();
+      });
+
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) closeModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+      });
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
