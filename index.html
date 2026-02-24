@@ -330,7 +330,40 @@
     .card-ilga-link:hover {
       text-decoration: underline;
     }
-    
+
+    .last-updated {
+      font-size: 12px;
+      color: #aaa;
+      margin-left: 4px;
+    }
+
+    .modal-last-action {
+      background: #f8f9fa;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .modal-last-action p {
+      margin: 0;
+    }
+
+    .modal-last-action .last-action-date {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .modal-ife-status {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
     /* Empty State */
     .empty-state {
       text-align: center;
@@ -688,6 +721,7 @@
       <button class="clear-filters-btn" id="clear-filters">Clear Filters</button>
       
       <span class="filter-count" id="filter-count">Showing 0 of 0 bills</span>
+      <span class="last-updated" id="last-updated"></span>
     </div>
   </div>
 
@@ -715,15 +749,20 @@
       </div>
       <div class="modal-body">
         <div class="modal-info-boxes">
-          <div class="info-box" id="modal-status-box">
-            <div class="info-box-label">Status</div>
-            <div class="info-box-value" id="modal-status"></div>
+          <div class="info-box" id="modal-stage-box">
+            <div class="info-box-label">Legislative Stage</div>
+            <div class="info-box-value" id="modal-stage"></div>
           </div>
           <div class="info-box session">
             <div class="info-box-label">Session</div>
             <div class="info-box-value" id="modal-session"></div>
           </div>
         </div>
+        <div class="modal-last-action" id="modal-last-action-section" style="display:none;">
+          <p><strong>Last Action:</strong> <span id="modal-last-action"></span></p>
+          <p class="last-action-date" id="modal-last-action-date"></p>
+        </div>
+        <div class="modal-ife-status">IFE Status: <span id="modal-ife-status"></span></div>
         <h4 class="modal-summary-label">Summary</h4>
         <p class="modal-summary" id="modal-summary"></p>
         <div class="modal-actions">
@@ -736,49 +775,57 @@
 
 
   <script>
-    // Legislation Data - IFE Endorsed, Sponsored, and Opposed Bills
-    const legislationData = [
-      // 2025 Session — Endorsed
-      { id: 1, billNumber: "HB3466", title: "Affordable Housing Special Assessment Program (AHSAP)", description: "Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Details IHDA's responsibility in calculating/sharing minimum per sq. ft. expenditure requirements for rehabilitation to qualify. Extends AHSAP to 2037.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Property Taxes", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3466&DocTypeID=HB&LegId=162109&SessionID=114" },
-      { id: 2, billNumber: "SB1911", title: "Affordable Housing Special Assessment Program (Senate)", description: "Senate companion to HB3466. Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Extends AHSAP to 2037. Governor approved 12/12/25.", year: [2025], status: "Passed into law", type: "Endorsed", category: "Property Taxes", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1911&DocTypeID=SB&LegId=161199&SessionID=114" },
-      { id: 3, billNumber: "SB0062", title: "Build Illinois Homes Tax Credit Act", description: "Creates the Build Illinois Homes Tax Credit Act. Qualified developments are low-income housing projects. Upon construction or rehabilitation, IHDA or DOH issues state credit eligibility statements. Allows qualified taxpayers to be awarded tax credits for their development if necessary for financial feasibility. Would create a state match to the federal Low Income Housing Tax Credit.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Affordable Housing Development", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=62&DocTypeID=SB&LegId=157167&SessionID=114" },
-      { id: 4, billNumber: "HB2545", title: "AHPAA Supportive Housing Amendment", description: "Amends Affordable Housing Planning and Appeals Act. Allows for a broader range of parties to appeal decisions and clarifies timeline for appeals and responses, consequences of failing to respond, and the municipality's burden in responding. Shifts burden of proof onto municipality to demonstrate that a proposed supportive housing project would be detrimental.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "AHPAA", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2545&DocTypeID=HB&LegId=160392&SessionID=114" },
-      { id: 5, billNumber: "HB1814", title: "Missing Middle Housing Act", description: "Amends zoning division of IL Municipal Code. Requires large cities to allow middle housing development on large lots zoned residential. Requires smaller cities to allow development of at least duplexes on lots allowing detached single family dwellings. Prohibits applicable municipalities from discouraging development or regulating development in an inconsistent manner.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1814&DocTypeID=HB&LegId=159270&SessionID=114" },
-      { id: 6, billNumber: "HB1813", title: "ADU Authorization Act", description: "Amends the Control Over Building and Construction Article of the IL Municipal Code. Defines accessory dwelling unit and efficiency unit. Prohibits municipalities from prohibiting the building or use of ADUs and prohibits home rule units from acting inconsistently with the Act.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1813&DocTypeID=HB&LegId=159269&SessionID=114" },
-      { id: 7, billNumber: "HB3552", title: "Local Accessory Dwelling Unit Act", description: "Creates Local Accessory Dwelling Unit Act. Defines accessory dwelling unit, types of units, and discretionary review. Prohibits local governments from prohibiting the building or use of ADUs and sets requirements for ADU application review, timelines, delays, and processing. Prohibits home rule units from acting inconsistently with the Act.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3552&DocTypeID=HB&LegId=162242&SessionID=114" },
-      { id: 8, billNumber: "HB1843", title: "Family Status Housing Protection Act", description: "Amends the Zoning Division of the IL Municipal Code. Disallows classification, regulation, and restriction on use of property based on family relationship. Prohibits municipalities from adopting zoning regulations that prohibit 2 or more unrelated people from living together, and regulations that prohibit community-integrated living arrangements.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1843&DocTypeID=HB&LegId=159333&SessionID=114" },
-      { id: 9, billNumber: "HB3288", title: "Affordable Communities Act", description: "Creates the Affordable Communities Act. Clarifies and defines middle housing types. Applies to zoning units with populations over 100,000 and prohibits regulations from preventing middle housing development. Requires these zoning units to adopt land use ordinances and amend zoning maps/ordinances to implement middle housing requirements. Allows IHDA to adopt emergency rules for implementing the Act's requirements.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3288&DocTypeID=HB&LegId=161778&SessionID=114" },
-      { id: 10, billNumber: "HB1429", title: "Bill of Rights for the Homeless Act Amendment", description: "Amends the Bill of Rights for the Homeless Act. Prohibits state and local government from passing rules that fine or criminally penalize people experiencing unsheltered homelessness for engaging in life-sustaining activities (like eating, keeping belongings, and sleeping) on public property. Requires written and oral notice to be given prior to removal at a site. Makes unsheltered homelessness an affirmative defense to charges of violating rules that criminalize occupying or engaging in life-sustaining activities.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1429&DocTypeID=HB&LegId=157430&SessionID=114" },
-      { id: 11, billNumber: "SB2264", title: "Crime-Free and Nuisance Housing Ordinances Regulation", description: "Amends the Counties Code, IL Municipal Code, and Housing Authorities Act. Prohibits counties, municipalities, and housing authorities from adopting, enforcing, or implementing regulations affecting a tenancy because of contact with law enforcement or emergency services. Eliminates unfair penalties and evictions of tenants based on alleged criminal or nuisance activity.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Tenant Protections", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2264&DocTypeID=SB&LegId=162041&SessionID=114" },
-      { id: 12, billNumber: "HB3256", title: "People Over Parking Act", description: "Creates the People Over Parking Act. Defines various development projects and parking requirements. Prohibits minimum automobile parking requirements if a project is within 1/2 mile of a public transportation hub. Allows local governments to impose requirements for parking spaces if a project provides parking voluntarily. Prohibits home rule units from acting inconsistently.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3256&DocTypeID=HB&LegId=161742&SessionID=114" },
-      { id: 13, billNumber: "SB2352", title: "People Over Parking Act (Senate)", description: "Senate companion to HB3256. Creates the People Over Parking Act. Prohibits minimum automobile parking requirements if a project is within 1/2 mile of a public transportation hub.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2352&DocTypeID=SB&LegId=162316&SessionID=114" },
-      { id: 14, billNumber: "SB2111", title: "Vehicle Code - Bicycles Exemptions", description: "Amends the IL Vehicle Code. People riding a bike on the road are not prohibited from side-by-side riding, riding contraflow on one-way streets, and rolling through stop signs at clear intersections. Governor approved 12/16/25.", year: [2025], status: "Passed into law", type: "Endorsed", category: "Transportation", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2111&DocTypeID=SB&LegId=161644&SessionID=114" },
-      { id: 15, billNumber: "HB3438", title: "Transportation Reform Bill", description: "Amends DOT Law of the Civil Admin Code of IL. Amends the Regional Transportation Authority Act, creates the Northern IL Transit Authority, generally acts as the transit reform bill with funding. Includes the People Over Parking Act provisions.", year: [2025, 2026], status: "Not passed into law", type: "Endorsed", category: "Transportation", url: "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3438&DocTypeID=HB&LegId=162067&SessionID=114" },
-      // 2026 Session — New Bills
-      { id: 16, billNumber: "HB4377", title: "PHA - No Work Requirements", description: "Amends Housing Authorities Act. Unless otherwise required by federal law or regulation, prohibits housing authorities from establishing time limits and work requirements as conditions of eligibility for rent subsidy or assistance. Housing authorities may encourage participation in voluntary employment or job training if it does not impact eligibility.", year: [2026], status: "Not passed into law", type: "Sponsored", category: "Public Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4377&GAID=18&DocTypeID=HB&LegId=164950&SessionID=114" },
-      { id: 17, billNumber: "SB3084", title: "PHA - No Work Requirements (Senate)", description: "Senate companion to HB4377. Amends Housing Authorities Act. Unless otherwise required by federal law or regulation, prohibits housing authorities from establishing time limits and work requirements as conditions of eligibility for rent subsidy or assistance.", year: [2026], status: "Not passed into law", type: "Sponsored", category: "Public Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=3084&GAID=18&DocTypeID=SB&LegId=165665&SessionID=114" },
-      { id: 18, billNumber: "HB4413", title: "Revenue - Affordable Housing", description: "Amends IL Housing Dev. Act and IL Income Tax Act. Credits awarded under affordable housing tax donation program is limited in 2027 and will increase by 10% each year after. Affordable housing donation income tax credit applies through taxable year ending 2036.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Affordable Housing Development", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4413&GAID=18&DocTypeID=HB&LegId=165058&SessionID=114" },
-      { id: 19, billNumber: "SB3169", title: "Revenue - Affordable Housing (CLT)", description: "Amends Hotel Operators' Occupation Tax Act. Imposes a tax upon hosting platforms that facilitate renting, leasing, or letting of short-term rentals. Proceeds shall be deposited in the Community Land Trust Fund. Property owned by a nonprofit community land trust used exclusively for creation and maintenance of permanently affordable residences is exempt from property tax.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Affordable Housing Development", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=3169&GAID=18&DocTypeID=SB&LegId=165814&SessionID=114" },
-      { id: 20, billNumber: "HB4510", title: "Missing Middle Housing Affordability Act", description: "Creates the Missing Middle Housing Affordability Act.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4510&GAID=18&DocTypeID=HB&LegId=165295&SessionID=114" },
-      { id: 21, billNumber: "HB4568", title: "Home Illinois Program ($352M)", description: "Appropriates $352,200,000 from the General Revenue Fund to DHS for grants and administrative expenses of the Home Illinois Program, including pilot programs to prevent and end homelessness, including homelessness prevention, emergency and transitional housing, rapid rehousing, outreach, and related services and supports.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4568&GAID=18&DocTypeID=HB&LegId=165428&SessionID=114" },
-      { id: 22, billNumber: "SB2969", title: "Home Illinois Program (Senate)", description: "Senate companion to HB4568. Appropriates $352,200,000 from the General Revenue Fund to DHS for grants and administrative expenses of the Home Illinois Program to prevent and end homelessness.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=2969&GAID=18&DocTypeID=SB&LegId=165401&SessionID=114" },
-      { id: 23, billNumber: "SB3165", title: "Housing is Recovery Program ($10M)", description: "Appropriates $10,000,000 from the General Revenue Fund to DHS for the Housing is Recovery Program to support rental assistance for individuals with mental health and substance use challenges who are experiencing homelessness.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=3165&GAID=18&DocTypeID=SB&LegId=165810&SessionID=114" },
-      { id: 24, billNumber: "HB4588", title: "Parking - High Population Cities", description: "Amends the People Over Parking Act. Provides that the Act applies to municipalities with a population of more than 2 million, rather than all units of local government. Would weaken the People Over Parking Act by limiting its scope.", year: [2026], status: "Not passed into law", type: "Opposed", category: "Zoning", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=4588&GAID=18&DocTypeID=HB&LegId=165448&SessionID=114" },
-      { id: 25, billNumber: "SB3009", title: "Neighborhood Housing ($5M)", description: "Appropriates $5,000,000 from the General Revenue Fund to the Department of Commerce and Economic Opportunity for a grant to Neighborhood Housing Services of Chicago for costs associated with funding equitable mortgage lending and homebuyer subsidies, foreclosure prevention services, and other support.", year: [2026], status: "Not passed into law", type: "Endorsed", category: "Housing", url: "https://www.ilga.gov/Legislation/BillStatus?DocNum=3009&GAID=18&DocTypeID=SB&LegId=165513&SessionID=114" }
+    // Fallback data — used if data/bills.json cannot be fetched (e.g. local file:// open, network error)
+    const FALLBACK_DATA = [
+      {id:1,billNumber:"HB3466",title:"Affordable Housing Special Assessment Program (AHSAP)",description:"Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Details IHDA's responsibility in calculating/sharing minimum per sq. ft. expenditure requirements for rehabilitation to qualify. Extends AHSAP to 2037.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Property Taxes",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3466&DocTypeID=HB&LegId=162109&SessionID=114"},
+      {id:2,billNumber:"SB1911",title:"Affordable Housing Special Assessment Program (Senate)",description:"Senate companion to HB3466. Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Extends AHSAP to 2037. Governor approved 12/12/25.",year:[2025],status:"Passed into law",type:"Endorsed",category:"Property Taxes",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1911&DocTypeID=SB&LegId=161199&SessionID=114"},
+      {id:3,billNumber:"SB0062",title:"Build Illinois Homes Tax Credit Act",description:"Creates the Build Illinois Homes Tax Credit Act. Qualified developments are low-income housing projects. Upon construction or rehabilitation, IHDA or DOH issues state credit eligibility statements. Allows qualified taxpayers to be awarded tax credits for their development if necessary for financial feasibility. Would create a state match to the federal Low Income Housing Tax Credit.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Affordable Housing Development",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=62&DocTypeID=SB&LegId=157167&SessionID=114"},
+      {id:4,billNumber:"HB2545",title:"AHPAA Supportive Housing Amendment",description:"Amends Affordable Housing Planning and Appeals Act. Allows for a broader range of parties to appeal decisions and clarifies timeline for appeals and responses, consequences of failing to respond, and the municipality's burden in responding. Shifts burden of proof onto municipality to demonstrate that a proposed supportive housing project would be detrimental.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"AHPAA",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2545&DocTypeID=HB&LegId=160392&SessionID=114"},
+      {id:5,billNumber:"HB1814",title:"Missing Middle Housing Act",description:"Amends zoning division of IL Municipal Code. Requires large cities to allow middle housing development on large lots zoned residential. Requires smaller cities to allow development of at least duplexes on lots allowing detached single family dwellings. Prohibits applicable municipalities from discouraging development or regulating development in an inconsistent manner.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Zoning",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1814&DocTypeID=HB&LegId=159270&SessionID=114"},
+      {id:6,billNumber:"HB1813",title:"ADU Authorization Act",description:"Amends the Control Over Building and Construction Article of the IL Municipal Code. Defines accessory dwelling unit and efficiency unit. Prohibits municipalities from prohibiting the building or use of ADUs and prohibits home rule units from acting inconsistently with the Act.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Zoning",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1813&DocTypeID=HB&LegId=159269&SessionID=114"},
+      {id:7,billNumber:"HB3552",title:"Local Accessory Dwelling Unit Act",description:"Creates Local Accessory Dwelling Unit Act. Defines accessory dwelling unit, types of units, and discretionary review. Prohibits local governments from prohibiting the building or use of ADUs and sets requirements for ADU application review, timelines, delays, and processing. Prohibits home rule units from acting inconsistently with the Act.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Zoning",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3552&DocTypeID=HB&LegId=162242&SessionID=114"},
+      {id:8,billNumber:"HB1843",title:"Family Status Housing Protection Act",description:"Amends the Zoning Division of the IL Municipal Code. Disallows classification, regulation, and restriction on use of property based on family relationship. Prohibits municipalities from adopting zoning regulations that prohibit 2 or more unrelated people from living together, and regulations that prohibit community-integrated living arrangements.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Zoning",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1843&DocTypeID=HB&LegId=159333&SessionID=114"},
+      {id:9,billNumber:"HB3288",title:"Affordable Communities Act",description:"Creates the Affordable Communities Act. Clarifies and defines middle housing types. Applies to zoning units with populations over 100,000 and prohibits regulations from preventing middle housing development. Requires these zoning units to adopt land use ordinances and amend zoning maps/ordinances to implement middle housing requirements. Allows IHDA to adopt emergency rules for implementing the Act's requirements.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Zoning",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3288&DocTypeID=HB&LegId=161778&SessionID=114"},
+      {id:10,billNumber:"HB1429",title:"Bill of Rights for the Homeless Act Amendment",description:"Amends the Bill of Rights for the Homeless Act. Prohibits state and local government from passing rules that fine or criminally penalize people experiencing unsheltered homelessness for engaging in life-sustaining activities (like eating, keeping belongings, and sleeping) on public property. Requires written and oral notice to be given prior to removal at a site. Makes unsheltered homelessness an affirmative defense to charges of violating rules that criminalize occupying or engaging in life-sustaining activities.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Housing",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1429&DocTypeID=HB&LegId=157430&SessionID=114"},
+      {id:11,billNumber:"SB2264",title:"Crime-Free and Nuisance Housing Ordinances Regulation",description:"Amends the Counties Code, IL Municipal Code, and Housing Authorities Act. Prohibits counties, municipalities, and housing authorities from adopting, enforcing, or implementing regulations affecting a tenancy because of contact with law enforcement or emergency services. Eliminates unfair penalties and evictions of tenants based on alleged criminal or nuisance activity.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Tenant Protections",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2264&DocTypeID=SB&LegId=162041&SessionID=114"},
+      {id:12,billNumber:"HB3256",title:"People Over Parking Act",description:"Creates the People Over Parking Act. Defines various development projects and parking requirements. Prohibits minimum automobile parking requirements if a project is within 1/2 mile of a public transportation hub. Allows local governments to impose requirements for parking spaces if a project provides parking voluntarily. Prohibits home rule units from acting inconsistently.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Zoning",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3256&DocTypeID=HB&LegId=161742&SessionID=114"},
+      {id:13,billNumber:"SB2352",title:"People Over Parking Act (Senate)",description:"Senate companion to HB3256. Creates the People Over Parking Act. Prohibits minimum automobile parking requirements if a project is within 1/2 mile of a public transportation hub.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Zoning",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2352&DocTypeID=SB&LegId=162316&SessionID=114"},
+      {id:14,billNumber:"SB2111",title:"Vehicle Code - Bicycles Exemptions",description:"Amends the IL Vehicle Code. People riding a bike on the road are not prohibited from side-by-side riding, riding contraflow on one-way streets, and rolling through stop signs at clear intersections. Governor approved 12/16/25.",year:[2025],status:"Passed into law",type:"Endorsed",category:"Transportation",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2111&DocTypeID=SB&LegId=161644&SessionID=114"},
+      {id:15,billNumber:"HB3438",title:"Transportation Reform Bill",description:"Amends DOT Law of the Civil Admin Code of IL. Amends the Regional Transportation Authority Act, creates the Northern IL Transit Authority, generally acts as the transit reform bill with funding. Includes the People Over Parking Act provisions.",year:[2025,2026],status:"Not passed into law",type:"Endorsed",category:"Transportation",url:"https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3438&DocTypeID=HB&LegId=162067&SessionID=114"},
+      {id:16,billNumber:"HB4377",title:"PHA - No Work Requirements",description:"Amends Housing Authorities Act. Unless otherwise required by federal law or regulation, prohibits housing authorities from establishing time limits and work requirements as conditions of eligibility for rent subsidy or assistance. Housing authorities may encourage participation in voluntary employment or job training if it does not impact eligibility.",year:[2026],status:"Not passed into law",type:"Sponsored",category:"Public Housing",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=4377&GAID=18&DocTypeID=HB&LegId=164950&SessionID=114"},
+      {id:17,billNumber:"SB3084",title:"PHA - No Work Requirements (Senate)",description:"Senate companion to HB4377. Amends Housing Authorities Act. Unless otherwise required by federal law or regulation, prohibits housing authorities from establishing time limits and work requirements as conditions of eligibility for rent subsidy or assistance.",year:[2026],status:"Not passed into law",type:"Sponsored",category:"Public Housing",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=3084&GAID=18&DocTypeID=SB&LegId=165665&SessionID=114"},
+      {id:18,billNumber:"HB4413",title:"Revenue - Affordable Housing",description:"Amends IL Housing Dev. Act and IL Income Tax Act. Credits awarded under affordable housing tax donation program is limited in 2027 and will increase by 10% each year after. Affordable housing donation income tax credit applies through taxable year ending 2036.",year:[2026],status:"Not passed into law",type:"Endorsed",category:"Affordable Housing Development",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=4413&GAID=18&DocTypeID=HB&LegId=165058&SessionID=114"},
+      {id:19,billNumber:"SB3169",title:"Revenue - Affordable Housing (CLT)",description:"Amends Hotel Operators' Occupation Tax Act. Imposes a tax upon hosting platforms that facilitate renting, leasing, or letting of short-term rentals. Proceeds shall be deposited in the Community Land Trust Fund. Property owned by a nonprofit community land trust used exclusively for creation and maintenance of permanently affordable residences is exempt from property tax.",year:[2026],status:"Not passed into law",type:"Endorsed",category:"Affordable Housing Development",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=3169&GAID=18&DocTypeID=SB&LegId=165814&SessionID=114"},
+      {id:20,billNumber:"HB4510",title:"Missing Middle Housing Affordability Act",description:"Creates the Missing Middle Housing Affordability Act.",year:[2026],status:"Not passed into law",type:"Endorsed",category:"Zoning",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=4510&GAID=18&DocTypeID=HB&LegId=165295&SessionID=114"},
+      {id:21,billNumber:"HB4568",title:"Home Illinois Program ($352M)",description:"Appropriates $352,200,000 from the General Revenue Fund to DHS for grants and administrative expenses of the Home Illinois Program, including pilot programs to prevent and end homelessness, including homelessness prevention, emergency and transitional housing, rapid rehousing, outreach, and related services and supports.",year:[2026],status:"Not passed into law",type:"Endorsed",category:"Housing",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=4568&GAID=18&DocTypeID=HB&LegId=165428&SessionID=114"},
+      {id:22,billNumber:"SB2969",title:"Home Illinois Program (Senate)",description:"Senate companion to HB4568. Appropriates $352,200,000 from the General Revenue Fund to DHS for grants and administrative expenses of the Home Illinois Program to prevent and end homelessness.",year:[2026],status:"Not passed into law",type:"Endorsed",category:"Housing",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=2969&GAID=18&DocTypeID=SB&LegId=165401&SessionID=114"},
+      {id:23,billNumber:"SB3165",title:"Housing is Recovery Program ($10M)",description:"Appropriates $10,000,000 from the General Revenue Fund to DHS for the Housing is Recovery Program to support rental assistance for individuals with mental health and substance use challenges who are experiencing homelessness.",year:[2026],status:"Not passed into law",type:"Endorsed",category:"Housing",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=3165&GAID=18&DocTypeID=SB&LegId=165810&SessionID=114"},
+      {id:24,billNumber:"HB4588",title:"Parking - High Population Cities",description:"Amends the People Over Parking Act. Provides that the Act applies to municipalities with a population of more than 2 million, rather than all units of local government. Would weaken the People Over Parking Act by limiting its scope.",year:[2026],status:"Not passed into law",type:"Opposed",category:"Zoning",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=4588&GAID=18&DocTypeID=HB&LegId=165448&SessionID=114"},
+      {id:25,billNumber:"SB3009",title:"Neighborhood Housing ($5M)",description:"Appropriates $5,000,000 from the General Revenue Fund to the Department of Commerce and Economic Opportunity for a grant to Neighborhood Housing Services of Chicago for costs associated with funding equitable mortgage lending and homebuyer subsidies, foreclosure prevention services, and other support.",year:[2026],status:"Not passed into law",type:"Endorsed",category:"Housing",url:"https://www.ilga.gov/Legislation/BillStatus?DocNum=3009&GAID=18&DocTypeID=SB&LegId=165513&SessionID=114"}
     ];
 
-    // Status styling configuration
+    // Stage styling (from ILGA live data)
+    const stageConfig = {
+      "Signed into Law":            { bg: "#e8f5e9", text: "#1b5e20", border: "#81c784" },
+      "Awaiting Governor Signature":{ bg: "#e3f2fd", text: "#0d47a1", border: "#90caf9" },
+      "Enrolled":                   { bg: "#c8e6c9", text: "#2e7d32", border: "#66bb6a" },
+      "Passed House":               { bg: "#f0f7f0", text: "#2e7d32", border: "#a5d6a7" },
+      "Passed Senate":              { bg: "#f0f7f0", text: "#2e7d32", border: "#a5d6a7" },
+      "In House Committee":         { bg: "#f5f5f5", text: "#616161", border: "#bdbdbd" },
+      "In Senate Committee":        { bg: "#efefef", text: "#616161", border: "#bdbdbd" },
+      "Failed":                     { bg: "#fce4ec", text: "#b71c1c", border: "#ef9a9a" },
+      "Unknown":                    { bg: "#f5f5f5", text: "#9e9e9e", border: "#e0e0e0" }
+    };
+
+    // IFE editorial status styling
     const statusConfig = {
-      "Passed into law": { bg: "#e8f5e9", text: "#1b5e20", border: "#81c784" },
+      "Passed into law":     { bg: "#e8f5e9", text: "#1b5e20", border: "#81c784" },
       "Not passed into law": { bg: "#f5f5f5", text: "#616161", border: "#bdbdbd" }
     };
 
     // State
-    let currentFilters = {
-      status: "All",
-      type: "All",
-      year: "All"
-    };
+    let legislationData = [];
+    let currentFilters = { status: "All", type: "All", year: "All" };
 
     // DOM Elements
     const grid = document.getElementById('legislation-grid');
@@ -790,11 +837,29 @@
     const clearFiltersBtn = document.getElementById('clear-filters');
     const filterCount = document.getElementById('filter-count');
 
-    // Initialize
-    function init() {
+    // Initialize — loads from data/bills.json (updated daily by GitHub Actions)
+    async function init() {
+      try {
+        const resp = await fetch('data/bills.json');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        legislationData = await resp.json();
+      } catch (e) {
+        console.warn('Could not load data/bills.json, using fallback data:', e);
+        legislationData = FALLBACK_DATA;
+      }
       updateStats();
       renderCards();
       setupEventListeners();
+      updateLastFetched();
+    }
+
+    function updateLastFetched() {
+      const el = document.getElementById('last-updated');
+      if (!el) return;
+      const date = legislationData[0]?.ilgaFetchedAt;
+      if (date) {
+        el.textContent = 'Status updated ' + new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
     }
 
     function updateStats() {
@@ -828,18 +893,11 @@
       } else {
         emptyState.style.display = 'none';
         grid.style.display = 'grid';
-
-        filtered.forEach(bill => {
-          const card = createCard(bill);
-          grid.appendChild(card);
-        });
+        filtered.forEach(bill => grid.appendChild(createCard(bill)));
       }
 
       filterCount.textContent = `Showing ${filtered.length} of ${legislationData.length} bills`;
-
-      // Update clear filters button visibility
-      const hasFilters = Object.values(currentFilters).some(v => v !== "All");
-      clearFiltersBtn.classList.toggle('visible', hasFilters);
+      clearFiltersBtn.classList.toggle('visible', Object.values(currentFilters).some(v => v !== "All"));
     }
 
     function createCard(bill) {
@@ -847,7 +905,8 @@
       card.className = 'bill-card';
       card.onclick = () => openModal(bill);
 
-      const statusStyle = statusConfig[bill.status] || { bg: '#f5f5f5', text: '#666', border: '#ddd' };
+      const stage = bill.stage || bill.status;
+      const stageStyle = stageConfig[stage] || stageConfig[bill.status] || { bg: '#f5f5f5', text: '#666', border: '#ddd' };
       const typeClass = bill.type.toLowerCase();
 
       card.innerHTML = `
@@ -861,7 +920,7 @@
           <h4 class="bill-title">${bill.title}</h4>
           <p class="bill-description">${bill.description}</p>
           <div class="card-footer">
-            <span class="status-badge" style="background-color: ${statusStyle.bg}; color: ${statusStyle.text}; border: 1px solid ${statusStyle.border};">${bill.status}</span>
+            <span class="status-badge" style="background-color:${stageStyle.bg};color:${stageStyle.text};border:1px solid ${stageStyle.border};">${stage}</span>
             <span class="session-year">${getYearDisplay(bill.year)}</span>
           </div>
         </div>
@@ -872,7 +931,9 @@
 
     function openModal(bill) {
       const typeClass = bill.type.toLowerCase();
-      const statusStyle = statusConfig[bill.status] || { bg: '#f5f5f5', text: '#666', border: '#ddd' };
+      const stage = bill.stage || bill.status;
+      const stageStyle = stageConfig[stage] || stageConfig[bill.status] || { bg: '#f5f5f5', text: '#666', border: '#ddd' };
+      const statusStyle = statusConfig[bill.status] || { bg: '#f5f5f5', text: '#616161', border: '#bdbdbd' };
 
       document.getElementById('modal-header').className = `modal-header ${typeClass}`;
       document.getElementById('modal-tags').innerHTML = `
@@ -882,15 +943,31 @@
       document.getElementById('modal-bill-number').textContent = bill.billNumber;
       document.getElementById('modal-bill-title').textContent = bill.title;
 
-      const statusBox = document.getElementById('modal-status-box');
-      statusBox.style.backgroundColor = statusStyle.bg;
-      statusBox.style.border = `1px solid ${statusStyle.border}`;
-      document.getElementById('modal-status').textContent = bill.status;
-      document.getElementById('modal-status').style.color = statusStyle.text;
+      // Stage box
+      const stageBox = document.getElementById('modal-stage-box');
+      stageBox.style.backgroundColor = stageStyle.bg;
+      stageBox.style.border = `1px solid ${stageStyle.border}`;
+      document.getElementById('modal-stage').textContent = stage;
+      document.getElementById('modal-stage').style.color = stageStyle.text;
 
       document.getElementById('modal-session').textContent = getYearDisplay(bill.year) + ' — Illinois General Assembly';
-      document.getElementById('modal-summary').textContent = bill.description;
 
+      // Last action (only if we have live data)
+      const lastActionSection = document.getElementById('modal-last-action-section');
+      if (bill.lastAction) {
+        lastActionSection.style.display = 'block';
+        document.getElementById('modal-last-action').textContent = bill.lastAction;
+        document.getElementById('modal-last-action-date').textContent = bill.lastActionDate || '';
+      } else {
+        lastActionSection.style.display = 'none';
+      }
+
+      // IFE editorial status
+      const ifeEl = document.getElementById('modal-ife-status');
+      ifeEl.textContent = bill.status;
+      ifeEl.style.cssText = `background-color:${statusStyle.bg};color:${statusStyle.text};border:1px solid ${statusStyle.border};padding:2px 8px;border-radius:4px;font-weight:600;font-size:12px;`;
+
+      document.getElementById('modal-summary').textContent = bill.description;
       document.getElementById('modal-link').href = bill.url;
 
       modalOverlay.classList.add('visible');
@@ -903,20 +980,9 @@
     }
 
     function setupEventListeners() {
-      statusFilter.addEventListener('change', (e) => {
-        currentFilters.status = e.target.value;
-        renderCards();
-      });
-
-      typeFilter.addEventListener('change', (e) => {
-        currentFilters.type = e.target.value;
-        renderCards();
-      });
-
-      yearFilter.addEventListener('change', (e) => {
-        currentFilters.year = e.target.value;
-        renderCards();
-      });
+      statusFilter.addEventListener('change', (e) => { currentFilters.status = e.target.value; renderCards(); });
+      typeFilter.addEventListener('change', (e) => { currentFilters.type = e.target.value; renderCards(); });
+      yearFilter.addEventListener('change', (e) => { currentFilters.year = e.target.value; renderCards(); });
 
       clearFiltersBtn.addEventListener('click', () => {
         currentFilters = { status: "All", type: "All", year: "All" };
@@ -928,16 +994,10 @@
 
       document.getElementById('modal-close').addEventListener('click', closeModal);
       document.getElementById('modal-close-btn').addEventListener('click', closeModal);
-      modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) closeModal();
-      });
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeModal();
-      });
+      modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
     }
 
-    // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
