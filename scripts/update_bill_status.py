@@ -95,6 +95,26 @@ def get_last_action_fields(root):
     return last_action, last_action_date
 
 
+def get_primary_sponsor(root):
+    """Extract the chief sponsor name from <sponsor><sponsors> text.
+
+    ILGA XML: sponsors are hyphen-separated, e.g.:
+      "Rep. Will Guzzardi-Abdelnasser Rashid-Martha Deuter, ..."
+    The chief sponsor is the text before the first hyphen.
+    """
+    sponsor_el = root.find("sponsor")
+    if sponsor_el is None:
+        return ""
+    sponsors_el = sponsor_el.find("sponsors")
+    if sponsors_el is None or not sponsors_el.text:
+        return ""
+    # ILGA separates co-sponsors with hyphens, commas, or " and ".
+    # Split on each in turn to isolate the chief sponsor.
+    import re as _re
+    first = _re.split(r'-|,|\s+and\s+', sponsors_el.text.strip())[0].strip()
+    return first
+
+
 def get_action_texts(root):
     """Collect all <action> texts from the flat children of <actions>.
 
@@ -160,6 +180,7 @@ def process_bill(bill, prev_data):
         return {
             **bill,
             "stage": prev.get("stage", "Unknown"),
+            "primarySponsor": prev.get("primarySponsor", ""),
             "lastAction": prev.get("lastAction", ""),
             "lastActionDate": prev.get("lastActionDate", ""),
             "ilgaFetchedAt": prev.get("ilgaFetchedAt", ""),
@@ -173,6 +194,7 @@ def process_bill(bill, prev_data):
         return {
             **bill,
             "stage": prev.get("stage", "Unknown"),
+            "primarySponsor": prev.get("primarySponsor", ""),
             "lastAction": prev.get("lastAction", ""),
             "lastActionDate": prev.get("lastActionDate", ""),
             "ilgaFetchedAt": prev.get("ilgaFetchedAt", ""),
@@ -180,15 +202,17 @@ def process_bill(bill, prev_data):
 
     last_action, last_action_date = get_last_action_fields(root)
     action_history = get_action_texts(root)
+    primary_sponsor = get_primary_sponsor(root)
 
     stage = map_stage(last_action, action_history, doc_type)
     fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    print(f"    stage={stage}  lastAction={last_action[:70]}")
+    print(f"    stage={stage}  sponsor={primary_sponsor}  lastAction={last_action[:60]}")
 
     return {
         **bill,
         "stage": stage,
+        "primarySponsor": primary_sponsor,
         "lastAction": last_action,
         "lastActionDate": last_action_date,
         "ilgaFetchedAt": fetched_at,

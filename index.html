@@ -358,10 +358,10 @@
       color: #888;
     }
 
-    .modal-ife-status {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 20px;
+    .card-sponsor {
+      font-size: 12px;
+      color: #888;
+      margin: -4px 0 10px 0;
     }
 
     /* Empty State */
@@ -762,7 +762,6 @@
           <p><strong>Last Action:</strong> <span id="modal-last-action"></span></p>
           <p class="last-action-date" id="modal-last-action-date"></p>
         </div>
-        <div class="modal-ife-status">IFE Status: <span id="modal-ife-status"></span></div>
         <h4 class="modal-summary-label">Summary</h4>
         <p class="modal-summary" id="modal-summary"></p>
         <div class="modal-actions">
@@ -917,6 +916,7 @@
             <span class="tag category">${bill.category}</span>
           </div>
           <h3 class="bill-number">${bill.billNumber}</h3>
+          ${bill.primarySponsor ? `<p class="card-sponsor">${bill.primarySponsor}</p>` : ''}
           <h4 class="bill-title">${bill.title}</h4>
           <p class="bill-description">${bill.description}</p>
           <div class="card-footer">
@@ -933,7 +933,6 @@
       const typeClass = bill.type.toLowerCase();
       const stage = bill.stage || bill.status;
       const stageStyle = stageConfig[stage] || stageConfig[bill.status] || { bg: '#f5f5f5', text: '#666', border: '#ddd' };
-      const statusStyle = statusConfig[bill.status] || { bg: '#f5f5f5', text: '#616161', border: '#bdbdbd' };
 
       document.getElementById('modal-header').className = `modal-header ${typeClass}`;
       document.getElementById('modal-tags').innerHTML = `
@@ -961,11 +960,6 @@
       } else {
         lastActionSection.style.display = 'none';
       }
-
-      // IFE editorial status
-      const ifeEl = document.getElementById('modal-ife-status');
-      ifeEl.textContent = bill.status;
-      ifeEl.style.cssText = `background-color:${statusStyle.bg};color:${statusStyle.text};border:1px solid ${statusStyle.border};padding:2px 8px;border-radius:4px;font-weight:600;font-size:12px;`;
 
       document.getElementById('modal-summary').textContent = bill.description;
       document.getElementById('modal-link').href = bill.url;
