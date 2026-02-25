@@ -950,6 +950,7 @@
 
         <div class="modal-actions">
           <a class="btn-primary" id="modal-link" href="#" target="_blank" rel="noopener noreferrer">View on ILGA.gov &#8594;</a>
+          <button class="btn-secondary" id="modal-refresh-btn" style="display:none;" onclick="refreshBillILGA()">Refresh from ILGA</button>
           <button class="btn-danger" id="modal-delete-btn" style="display:none;" onclick="confirmDeleteBill()">Delete Bill</button>
           <button class="btn-secondary" id="modal-close-btn">Close</button>
         </div>
@@ -1343,6 +1344,8 @@
       document.getElementById('modal-notes-text').value = notesData[bill.billNumber]?.text || '';
       document.getElementById('notes-status').textContent = '';
 
+      document.getElementById('modal-refresh-btn').style.display =
+        bill.userAdded ? 'inline-block' : 'none';
       document.getElementById('modal-delete-btn').style.display =
         bill.userAdded ? 'inline-block' : 'none';
 
@@ -1378,6 +1381,40 @@
         alert(`Delete failed: ${e.message}`);
         deleteBtn.disabled = false;
         deleteBtn.textContent = 'Delete Bill';
+      }
+    }
+
+    async function refreshBillILGA() {
+      if (!currentBill) return;
+      const refreshBtn = document.getElementById('modal-refresh-btn');
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = 'Refreshing…';
+      try {
+        const data = await fetchBillFromILGA(currentBill.billNumber);
+        const updates = {
+          primarySponsor: data.primarySponsor,
+          stage:          data.stage,
+          lastAction:     data.lastAction,
+          lastActionDate: data.lastActionDate,
+          nextActionDate: data.nextActionDate,
+          nextActionType: data.nextActionType,
+          ilgaFetchedAt:  new Date().toISOString(),
+        };
+        const { content, sha } = await readGitHubFile('data/user-bills.json');
+        const userBills = (content || []).map(b =>
+          b.billNumber === currentBill.billNumber ? { ...b, ...updates } : b
+        );
+        await writeGitHubFile('data/user-bills.json', userBills, sha, `Refresh bill: ${currentBill.billNumber}`);
+        Object.assign(currentBill, updates);
+        legislationData = legislationData.map(b =>
+          b.billNumber === currentBill.billNumber ? { ...b, ...updates } : b
+        );
+        renderCards();
+        openModal(currentBill);
+      } catch (e) {
+        alert(`Refresh failed: ${e.message}`);
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = 'Refresh from ILGA';
       }
     }
 
