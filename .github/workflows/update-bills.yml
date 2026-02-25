@@ -3,7 +3,7 @@ name: Update Bill Status
 on:
   schedule:
     - cron: '0 13 * * *'  # Daily 1pm UTC / 8am CT
-  workflow_dispatch:        # Allow manual trigger
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   update:
