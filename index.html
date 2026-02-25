@@ -1184,7 +1184,10 @@
         }
         // Upcoming actions filter
         if (currentFilters.upcomingOnly) {
-          if (!bill.nextActionDate || bill.nextActionDate < today) return false;
+          if (!bill.nextActionDate) return false;
+          const [m, d, y] = bill.nextActionDate.split('/');
+          const isoDate = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+          if (isoDate < today) return false;
         }
         return true;
       });
@@ -1391,6 +1394,12 @@
       const lastAction    = lastActionEl?.textContent?.trim() || '';
       const lastActionDate= lastDateEl?.textContent?.trim() || '';
 
+      // Next scheduled action
+      const nextActionEl   = xml.querySelector('nextaction > action');
+      const nextDateEl     = xml.querySelector('nextaction > statusdate');
+      const nextActionDate = nextDateEl?.textContent?.trim()   || null;
+      const nextActionType = nextActionEl?.textContent?.trim() || null;
+
       // Stage (simplified mirror of Python logic)
       const la = lastAction.toLowerCase();
       let stage;
@@ -1405,7 +1414,8 @@
       const ilgaUrl = `https://www.ilga.gov/Legislation/BillStatus?DocNum=${m[2]}&GAID=18&DocTypeID=${docType}&SessionID=114`;
       return {
         billNumber: rawBillNumber.trim().toUpperCase(),
-        primarySponsor, stage, lastAction, lastActionDate, ilgaUrl
+        primarySponsor, stage, lastAction, lastActionDate,
+        nextActionDate, nextActionType, ilgaUrl
       };
     }
 
@@ -1513,8 +1523,8 @@
         lastActionDate:  addBillIlgaData?.lastActionDate   || '',
         ilgaFetchedAt:   addBillIlgaData ? new Date().toISOString() : '',
         stageChangedAt:  null,
-        nextActionDate:  null,
-        nextActionType:  null,
+        nextActionDate:  addBillIlgaData?.nextActionDate  || null,
+        nextActionType:  addBillIlgaData?.nextActionType  || null,
         userAdded:       true
       };
 
