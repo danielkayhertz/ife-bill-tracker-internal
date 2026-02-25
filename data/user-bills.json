@@ -15,11 +15,14 @@
     "stage": "In House Committee",
     "lastAction": "Assigned to Housing Committee",
     "lastActionDate": "2/24/2026",
-    "ilgaFetchedAt": "2026-02-25T16:53:29Z",
+    "ilgaFetchedAt": "2026-02-25T17:51:30.135Z",
     "stageChangedAt": "2026-02-25T04:07:30Z",
     "nextActionDate": null,
     "nextActionType": null,
-    "userAdded": true
+    "userAdded": true,
+    "lastAmendmentName": null,
+    "lastAmendmentDate": null,
+    "isShellBill": false
   },
   {
     "id": "user-SB3438",
