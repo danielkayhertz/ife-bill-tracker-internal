@@ -20,5 +20,27 @@
     "nextActionDate": null,
     "nextActionType": null,
     "userAdded": true
+  },
+  {
+    "id": "user-SB3438",
+    "billNumber": "SB3438",
+    "title": "JCAR Responsiveness",
+    "description": "",
+    "year": [
+      2026
+    ],
+    "status": "Not passed into law",
+    "type": "Watching",
+    "category": "Other",
+    "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=3438&GAID=18&DocTypeID=SB&SessionID=114",
+    "primarySponsor": "Sen. Bill Cunningham",
+    "stage": "In Senate Committee",
+    "lastAction": "Assigned to Executive",
+    "lastActionDate": "2/17/2026",
+    "ilgaFetchedAt": "2026-02-25T04:12:43.180Z",
+    "stageChangedAt": null,
+    "nextActionDate": null,
+    "nextActionType": null,
+    "userAdded": true
   }
 ]
