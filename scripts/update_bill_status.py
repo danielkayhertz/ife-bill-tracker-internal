@@ -351,6 +351,10 @@ def process_bill(bill, prev_data):
     print(f"  {bill_number} -> {url}")
 
     prev         = prev_data.get(bill_number, {})
+    # Preserve type manually set via the browser UI (differs from BILLS constant default)
+    bill = dict(bill)
+    if prev.get("type") and prev["type"] != bill.get("type"):
+        bill["type"] = prev["type"]
     fetched_at   = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     prev_stage   = prev.get("stage")
     prev_sca     = prev.get("stageChangedAt")

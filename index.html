@@ -213,6 +213,19 @@
       background-color: #004a7a;
     }
 
+    .refresh-all-btn {
+      margin-top: 12px;
+      padding: 7px 16px;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    .refresh-all-btn:hover { background: rgba(255,255,255,0.25); }
+
     /* Main Grid */
     .main-content {
       max-width: 1200px;
@@ -821,6 +834,7 @@
       <div class="internal-badge">Internal Use Only</div>
       <h1>IFE Internal Bill Tracker</h1>
       <p>Shared notes, custom bill tracking, and real-time stage monitoring for the Illinois housing legislative agenda</p>
+      <button class="refresh-all-btn" onclick="refreshAllFromILGA()">↻ Refresh from ILGA</button>
     </div>
   </header>
 
@@ -877,6 +891,8 @@
           <option value="2025">2025</option>
         </select>
 
+        <input type="text" id="search-filter" class="filter-select"
+               placeholder="Search bills…" style="min-width:200px;">
         <button class="clear-filters-btn" id="clear-filters">Clear Filters</button>
 
         <span class="filter-count" id="filter-count">Showing 0 of 0 bills</span>
@@ -943,6 +959,21 @@
           <p><strong>Last Action:</strong> <span id="modal-last-action"></span></p>
           <p class="last-action-date" id="modal-last-action-date"></p>
         </div>
+        <div class="modal-ife-status-section">
+          <div class="notes-footer" style="margin-bottom:0;">
+            <span style="font-weight:600;color:#444;font-size:14px;">IFE Status</span>
+            <span id="modal-type-status" class="notes-status"></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+            <select id="modal-type-select" class="filter-select" style="min-width:140px;">
+              <option value="Watching">Watching</option>
+              <option value="Endorsed">Endorsed</option>
+              <option value="Sponsored">Sponsored</option>
+              <option value="Opposed">Opposed</option>
+            </select>
+            <button class="btn-primary" id="modal-type-save-btn" onclick="saveBillType()">Save Status</button>
+          </div>
+        </div>
         <h4 class="modal-summary-label">Summary</h4>
         <p class="modal-summary" id="modal-summary"></p>
 
@@ -963,6 +994,21 @@
           <button class="btn-secondary" id="modal-close-btn">Close</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Refresh All Progress Overlay -->
+  <div class="modal-overlay" id="refresh-overlay">
+    <div class="modal" style="max-width:420px;text-align:center;padding:40px 32px;">
+      <h3 id="refresh-overlay-title" style="margin:0 0 16px;">Refreshing from ILGA.gov…</h3>
+      <p id="refresh-progress-text" style="color:#555;margin-bottom:12px;">Starting…</p>
+      <div style="background:#e0e0e0;border-radius:6px;height:10px;margin-bottom:16px;">
+        <div id="refresh-progress-bar"
+             style="background:#1976d2;height:10px;border-radius:6px;width:0%;transition:width 0.2s;"></div>
+      </div>
+      <p id="refresh-status-text" style="color:#666;font-size:14px;min-height:20px;"></p>
+      <button id="refresh-close-btn" class="btn-secondary"
+              style="display:none;margin-top:16px;" onclick="document.getElementById('refresh-overlay').classList.remove('visible')">Close</button>
     </div>
   </div>
 
@@ -1108,7 +1154,7 @@
     let notesData       = {};
     let currentBill     = null;
     let addBillIlgaData = null;
-    let currentFilters  = { status: "All", type: "All", year: "All", changedSince: "", upcomingOnly: false };
+    let currentFilters  = { status: "All", type: "All", year: "All", changedSince: "", upcomingOnly: false, search: "" };
 
     // ── DOM refs ──────────────────────────────────────────────────────────────
     const grid            = document.getElementById('legislation-grid');
@@ -1120,6 +1166,7 @@
     const changedSinceEl  = document.getElementById('changed-since-filter');
     const hearingsEl      = document.getElementById('hearings-filter');
     const clearFiltersBtn = document.getElementById('clear-filters');
+    const searchEl        = document.getElementById('search-filter');
     const filterCount     = document.getElementById('filter-count');
 
     // ── GitHub API helpers ────────────────────────────────────────────────────
@@ -1223,6 +1270,14 @@
           const isoDate = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
           if (isoDate < today) return false;
         }
+        // Search filter
+        if (currentFilters.search) {
+          const q = currentFilters.search.toLowerCase();
+          const haystack = [bill.billNumber, bill.title, bill.description,
+                            bill.primarySponsor, bill.category]
+                            .map(f => (f || '').toLowerCase()).join(' ');
+          if (!haystack.includes(q)) return false;
+        }
         return true;
       });
     }
@@ -1273,7 +1328,8 @@
         || currentFilters.type   !== "All"
         || currentFilters.year   !== "All"
         || currentFilters.changedSince !== ""
-        || currentFilters.upcomingOnly;
+        || currentFilters.upcomingOnly
+        || currentFilters.search !== "";
       clearFiltersBtn.classList.toggle('visible', isFiltered);
     }
 
@@ -1390,6 +1446,16 @@
       document.getElementById('modal-notes-text').value = notesData[bill.billNumber]?.text || '';
       document.getElementById('notes-status').textContent = '';
 
+      const typeSelect = document.getElementById('modal-type-select');
+      typeSelect.value = bill.type || 'Watching';
+      document.getElementById('modal-type-status').textContent = '';
+      document.getElementById('modal-type-save-btn').disabled = false;
+      // Live preview: update header color on select change (before saving)
+      typeSelect.onchange = () => {
+        document.getElementById('modal-header').className =
+          `modal-header ${typeSelect.value.toLowerCase()}`;
+      };
+
       document.getElementById('modal-refresh-btn').style.display =
         bill.userAdded ? 'inline-block' : 'none';
       document.getElementById('modal-delete-btn').style.display =
@@ -1467,6 +1533,92 @@
       }
     }
 
+    async function refreshAllFromILGA() {
+      const overlay      = document.getElementById('refresh-overlay');
+      const titleEl      = document.getElementById('refresh-overlay-title');
+      const progressText = document.getElementById('refresh-progress-text');
+      const progressBar  = document.getElementById('refresh-progress-bar');
+      const statusText   = document.getElementById('refresh-status-text');
+      const closeBtn     = document.getElementById('refresh-close-btn');
+
+      // Reset overlay
+      titleEl.textContent      = 'Refreshing from ILGA.gov…';
+      progressText.textContent = 'Starting…';
+      progressBar.style.width  = '0%';
+      statusText.textContent   = '';
+      closeBtn.style.display   = 'none';
+      overlay.classList.add('visible');
+
+      const baseBills = legislationData.filter(b => !b.userAdded);
+      const userBills = legislationData.filter(b =>  b.userAdded);
+      const allBills  = [...baseBills, ...userBills];
+      const total     = allBills.length;
+
+      const ilgaFields = [
+        'stage', 'primarySponsor', 'lastAction', 'lastActionDate',
+        'nextActionDate', 'nextActionType', 'lastAmendmentName',
+        'lastAmendmentDate', 'isShellBill'
+      ];
+
+      const updatedBase = [...baseBills];
+      const updatedUser = [...userBills];
+
+      for (let i = 0; i < allBills.length; i++) {
+        const bill = allBills[i];
+        progressText.textContent = `${i + 1} / ${total} — ${bill.billNumber}`;
+        progressBar.style.width  = `${Math.round(((i + 1) / total) * 100)}%`;
+
+        try {
+          const data = await fetchBillFromILGA(bill.billNumber);
+          const fetchedAt = new Date().toISOString();
+          const stageChanged = data.stage !== bill.stage;
+          const updates = {};
+          for (const f of ilgaFields) updates[f] = data[f];
+          updates.ilgaFetchedAt  = fetchedAt;
+          updates.stageChangedAt = stageChanged ? fetchedAt : (bill.stageChangedAt || fetchedAt);
+
+          if (bill.userAdded) {
+            const idx = updatedUser.findIndex(b => b.billNumber === bill.billNumber);
+            if (idx !== -1) updatedUser[idx] = { ...updatedUser[idx], ...updates };
+          } else {
+            const idx = updatedBase.findIndex(b => b.billNumber === bill.billNumber);
+            if (idx !== -1) updatedBase[idx] = { ...updatedBase[idx], ...updates };
+          }
+        } catch (e) {
+          statusText.textContent = `Warning: ${bill.billNumber} failed — ${e.message}`;
+        }
+      }
+
+      // Update in-memory data
+      legislationData = [...updatedBase, ...updatedUser];
+      updateStats();
+      renderCards();
+      updateLastFetched();
+
+      // Write to GitHub
+      try {
+        progressText.textContent = 'Writing bills.json to GitHub…';
+        const { sha: baseSha } = await readGitHubFile('data/bills.json');
+        await writeGitHubFile('data/bills.json', updatedBase, baseSha, 'Refresh all: update bills.json from ILGA');
+
+        if (updatedUser.length > 0) {
+          progressText.textContent = 'Writing user-bills.json to GitHub…';
+          const { sha: userSha } = await readGitHubFile('data/user-bills.json');
+          await writeGitHubFile('data/user-bills.json', updatedUser, userSha, 'Refresh all: update user-bills.json from ILGA');
+        }
+
+        titleEl.textContent      = 'Refresh complete';
+        progressText.textContent = `Updated ${total} bills`;
+        progressBar.style.width  = '100%';
+        statusText.textContent   = 'Data saved to GitHub ✓';
+      } catch (e) {
+        titleEl.textContent    = 'Refresh complete (write error)';
+        statusText.textContent = `In-memory data updated, but GitHub write failed: ${e.message}`;
+      }
+
+      closeBtn.style.display = 'inline-block';
+    }
+
     // ── Save note ─────────────────────────────────────────────────────────────
     async function saveNote() {
       if (!currentBill) return;
@@ -1499,6 +1651,49 @@
             ? 'Auth error — check the GITHUB_TOKEN secret in the Cloudflare Worker'
             : `Error: ${e.message}`;
         }
+      }
+    }
+
+    async function saveBillType() {
+      if (!currentBill) return;
+      const select   = document.getElementById('modal-type-select');
+      const newType  = select.value;
+      const statusEl = document.getElementById('modal-type-status');
+      const saveBtn  = document.getElementById('modal-type-save-btn');
+
+      if (newType === currentBill.type) {
+        statusEl.textContent = 'No change';
+        setTimeout(() => statusEl.textContent = '', 1500);
+        return;
+      }
+
+      saveBtn.disabled = true;
+      statusEl.textContent = 'Saving…';
+
+      try {
+        if (currentBill.userAdded) {
+          const { content, sha } = await readGitHubFile('data/user-bills.json');
+          const updated = (content || []).map(b =>
+            b.billNumber === currentBill.billNumber ? { ...b, type: newType } : b);
+          await writeGitHubFile('data/user-bills.json', updated, sha,
+            `Update IFE status: ${currentBill.billNumber} → ${newType}`);
+        } else {
+          const { content, sha } = await readGitHubFile('data/bills.json');
+          const updated = (content || []).map(b =>
+            b.billNumber === currentBill.billNumber ? { ...b, type: newType } : b);
+          await writeGitHubFile('data/bills.json', updated, sha,
+            `Update IFE status: ${currentBill.billNumber} → ${newType}`);
+        }
+        currentBill.type = newType;
+        legislationData = legislationData.map(b =>
+          b.billNumber === currentBill.billNumber ? { ...b, type: newType } : b);
+        updateStats();
+        renderCards();
+        statusEl.textContent = 'Saved ✓';
+      } catch (e) {
+        statusEl.textContent = `Error: ${e.message}`;
+      } finally {
+        saveBtn.disabled = false;
       }
     }
 
@@ -1762,12 +1957,18 @@
       hearingsEl.addEventListener('change',   (e) => { currentFilters.upcomingOnly  = e.target.checked; renderCards(); });
 
       clearFiltersBtn.addEventListener('click', () => {
-        currentFilters = { status: "All", type: "All", year: "All", changedSince: "", upcomingOnly: false };
+        currentFilters = { status: "All", type: "All", year: "All", changedSince: "", upcomingOnly: false, search: "" };
         statusFilter.value    = "All";
         typeFilter.value      = "All";
         yearFilter.value      = "All";
         changedSinceEl.value  = "";
         hearingsEl.checked    = false;
+        searchEl.value        = "";
+        renderCards();
+      });
+
+      searchEl.addEventListener('input', (e) => {
+        currentFilters.search = e.target.value.trim();
         renderCards();
       });
 
