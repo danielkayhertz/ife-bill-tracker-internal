@@ -404,6 +404,13 @@
       font-weight: 600;
       color: #666;
     }
+    .card-next-action {
+      font-size: 12px;
+      color: #1a7340;
+      margin: 4px 0 0;
+    }
+    .card-next-action-label { font-weight: 600; margin-right: 2px; }
+    .card-next-action-date  { font-weight: 600; }
 
     /* Empty State */
     .empty-state {
@@ -642,6 +649,19 @@
       cursor: pointer;
       font-family: inherit;
     }
+
+    .btn-danger {
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-danger:hover { background: #b91c1c; }
 
     /* Add Bill Modal form styles */
     .form-label {
@@ -930,6 +950,7 @@
 
         <div class="modal-actions">
           <a class="btn-primary" id="modal-link" href="#" target="_blank" rel="noopener noreferrer">View on ILGA.gov &#8594;</a>
+          <button class="btn-danger" id="modal-delete-btn" style="display:none;" onclick="confirmDeleteBill()">Delete Bill</button>
           <button class="btn-secondary" id="modal-close-btn">Close</button>
         </div>
       </div>
@@ -968,6 +989,10 @@
             <div class="preview-row">
               <span class="preview-label">Last Action:</span>
               <span id="preview-last-action"></span>
+            </div>
+            <div class="preview-row" id="preview-next-action-row" style="display:none;">
+              <span class="preview-label">Next Action:</span>
+              <span id="preview-next-action"></span>
             </div>
           </div>
         </div>
@@ -1251,6 +1276,12 @@
             <span class="card-last-action-date">${bill.lastActionDate}</span>
             ${bill.lastAction ? ` — ${bill.lastAction}` : ''}
           </p>` : ''}
+          ${bill.nextActionDate ? `
+          <p class="card-next-action">
+            <span class="card-next-action-label">Next:</span>
+            <span class="card-next-action-date">${bill.nextActionDate}</span>
+            ${bill.nextActionType ? ` — ${bill.nextActionType}` : ''}
+          </p>` : ''}
           <div class="card-footer">
             <span class="status-badge" style="background-color:${stageStyle.bg};color:${stageStyle.text};border:1px solid ${stageStyle.border};">${stage}</span>
             <span class="session-year">${getYearDisplay(bill.year)}</span>
@@ -1312,6 +1343,9 @@
       document.getElementById('modal-notes-text').value = notesData[bill.billNumber]?.text || '';
       document.getElementById('notes-status').textContent = '';
 
+      document.getElementById('modal-delete-btn').style.display =
+        bill.userAdded ? 'inline-block' : 'none';
+
       modalOverlay.classList.add('visible');
       document.body.style.overflow = 'hidden';
     }
@@ -1320,6 +1354,31 @@
       modalOverlay.classList.remove('visible');
       document.body.style.overflow = '';
       currentBill = null;
+    }
+
+    function confirmDeleteBill() {
+      if (!currentBill) return;
+      const ok = confirm(`Delete ${currentBill.billNumber} — "${currentBill.title}"?\n\nThis cannot be undone.`);
+      if (ok) deleteBill(currentBill);
+    }
+
+    async function deleteBill(bill) {
+      const deleteBtn = document.getElementById('modal-delete-btn');
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting…';
+      try {
+        const { content, sha } = await readGitHubFile('data/user-bills.json');
+        const updated = (content || []).filter(b => b.billNumber !== bill.billNumber);
+        await writeGitHubFile('data/user-bills.json', updated, sha, `Delete bill: ${bill.billNumber}`);
+        legislationData = legislationData.filter(b => b.billNumber !== bill.billNumber);
+        closeModal();
+        updateStats();
+        renderCards();
+      } catch (e) {
+        alert(`Delete failed: ${e.message}`);
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Delete Bill';
+      }
     }
 
     // ── Save note ─────────────────────────────────────────────────────────────
@@ -1454,6 +1513,7 @@
       statusEl.textContent = 'Looking up…';
       statusEl.className   = 'lookup-status loading';
       previewEl.style.display = 'none';
+      document.getElementById('preview-next-action-row').style.display = 'none';
       addBillIlgaData = null;
 
       try {
@@ -1463,6 +1523,14 @@
         document.getElementById('preview-stage').textContent      = data.stage;
         document.getElementById('preview-last-action').textContent= data.lastAction
           + (data.lastActionDate ? ` (${data.lastActionDate})` : '');
+        const nextActionRowEl = document.getElementById('preview-next-action-row');
+        if (data.nextActionDate) {
+          document.getElementById('preview-next-action').textContent =
+            data.nextActionDate + (data.nextActionType ? ` — ${data.nextActionType}` : '');
+          nextActionRowEl.style.display = 'flex';
+        } else {
+          nextActionRowEl.style.display = 'none';
+        }
         previewEl.style.display  = 'block';
         statusEl.textContent     = 'Found on ILGA ✓';
         statusEl.className       = 'lookup-status success';
