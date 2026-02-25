@@ -394,6 +394,17 @@
       margin: -4px 0 10px 0;
     }
 
+    .card-last-action {
+      font-size: 12px;
+      color: #888;
+      margin: 0 0 12px 0;
+      line-height: 1.4;
+    }
+    .card-last-action-date {
+      font-weight: 600;
+      color: #666;
+    }
+
     /* Empty State */
     .empty-state {
       text-align: center;
@@ -850,7 +861,7 @@
 
       <!-- Row 2 -->
       <div class="filters-row">
-        <span class="filter-label">Changed since:</span>
+        <span class="filter-label">Last action since:</span>
         <input type="date" id="changed-since-filter" class="filter-select" style="min-width:150px;">
 
         <label class="filter-toggle">
@@ -1164,11 +1175,12 @@
         if (currentFilters.status !== "All" && bill.status !== currentFilters.status) return false;
         if (currentFilters.type   !== "All" && bill.type   !== currentFilters.type)   return false;
         if (currentFilters.year   !== "All" && !bill.year.includes(parseInt(currentFilters.year))) return false;
-        // Stage-change filter
+        // Last-action filter
         if (currentFilters.changedSince) {
-          if (!bill.stageChangedAt) return false;
-          const changedDate = bill.stageChangedAt.split('T')[0];
-          if (changedDate < currentFilters.changedSince) return false;
+          if (!bill.lastActionDate) return false;
+          const [m, d, y] = bill.lastActionDate.split('/');
+          const isoDate = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+          if (isoDate < currentFilters.changedSince) return false;
         }
         // Upcoming actions filter
         if (currentFilters.upcomingOnly) {
@@ -1231,6 +1243,11 @@
           ${bill.primarySponsor ? `<p class="card-sponsor">${bill.primarySponsor}</p>` : ''}
           <h4 class="bill-title">${bill.title}</h4>
           <p class="bill-description">${bill.description || ''}</p>
+          ${bill.lastActionDate ? `
+          <p class="card-last-action">
+            <span class="card-last-action-date">${bill.lastActionDate}</span>
+            ${bill.lastAction ? ` — ${bill.lastAction}` : ''}
+          </p>` : ''}
           <div class="card-footer">
             <span class="status-badge" style="background-color:${stageStyle.bg};color:${stageStyle.text};border:1px solid ${stageStyle.border};">${stage}</span>
             <span class="session-year">${getYearDisplay(bill.year)}</span>
