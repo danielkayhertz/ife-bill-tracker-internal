@@ -1,1 +1,24 @@
-[]
+[
+  {
+    "id": "user-HB5198",
+    "billNumber": "HB5198",
+    "title": "AHPAA Improvement Act",
+    "description": "",
+    "year": [
+      2026
+    ],
+    "status": "Not passed into law",
+    "type": "Sponsored",
+    "category": "AHPAA",
+    "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=5198&GAID=18&DocTypeID=HB&SessionID=114",
+    "primarySponsor": "Rep. Tracy Katz Muhl",
+    "stage": "In House Committee",
+    "lastAction": "Referred to Rules Committee",
+    "lastActionDate": "2/10/2026",
+    "ilgaFetchedAt": "2026-02-25T03:29:06.041Z",
+    "stageChangedAt": null,
+    "nextActionDate": null,
+    "nextActionType": null,
+    "userAdded": true
+  }
+]
