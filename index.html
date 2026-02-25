@@ -1110,22 +1110,32 @@
 
     // ── Init ──────────────────────────────────────────────────────────────────
     async function init() {
+      // bills.json is public — load it independently of the GitHub token
       try {
-        const [billsResp, userBillsResp, notesResp] = await Promise.all([
-          fetch('data/bills.json'),
+        const billsResp = await fetch('data/bills.json');
+        if (!billsResp.ok) throw new Error(`HTTP ${billsResp.status}`);
+        legislationData = await billsResp.json();
+      } catch (e) {
+        console.warn('Could not load bills.json, using fallback:', e);
+        legislationData = FALLBACK_DATA;
+      }
+
+      // GitHub API files require the token — fail gracefully without breaking bills
+      try {
+        const [userBillsResp, notesResp] = await Promise.all([
           readGitHubFile('data/user-bills.json'),
           readGitHubFile('data/notes.json')
         ]);
-        if (!billsResp.ok) throw new Error(`HTTP ${billsResp.status}`);
-        const baseBills = await billsResp.json();
         const userBills = userBillsResp.content || [];
-        notesData       = notesResp.content || {};
-        legislationData = [...baseBills, ...userBills];
+        notesData = notesResp.content || {};
+        if (userBills.length > 0) {
+          legislationData = [...legislationData, ...userBills];
+        }
       } catch (e) {
-        console.warn('Load error, using fallback data:', e);
-        legislationData = FALLBACK_DATA;
-        notesData       = {};
+        console.warn('GitHub API unavailable (check GITHUB_TOKEN):', e);
+        notesData = {};
       }
+
       updateStats();
       renderCards();
       setupEventListeners();
@@ -1321,7 +1331,9 @@
             statusEl.textContent = 'Error — please try again';
           }
         } else {
-          statusEl.textContent = `Error: ${e.message}`;
+          statusEl.textContent = e.message.includes('401')
+            ? 'Auth error — check GITHUB_TOKEN in index.html'
+            : `Error: ${e.message}`;
         }
       }
     }
@@ -1494,7 +1506,9 @@
         await addBill(billData);
         closeAddBillModal();
       } catch (e) {
-        errorEl.textContent   = `Error: ${e.message}`;
+        errorEl.textContent   = e.message.includes('401')
+          ? 'Auth error — the GITHUB_TOKEN in index.html is missing or invalid.'
+          : `Error: ${e.message}`;
         errorEl.style.display = 'block';
       } finally {
         submitBtn.textContent = 'Add Bill';
