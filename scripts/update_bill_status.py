@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Update bill status from ILGA.gov FTP XML files.
 
-Run from ife-bill-tracker/ directory:
+Run from ife-bill-tracker-internal/ directory:
     python scripts/update_bill_status.py
 
 Or from anywhere — the script uses __file__ to find the repo root.
+
+Internal version adds:
+  - stageChangedAt tracking (set when stage label changes vs. previous run)
+  - nextActionDate / nextActionType (parsed from ILGA XML <nextaction> element)
+  - user-bills.json refresh (updates ILGA fields while preserving user-set fields)
 """
 
 import json
@@ -17,18 +22,18 @@ from pathlib import Path
 
 ILGA_FTP_BASE = "https://www.ilga.gov/ftp/legislation/104/BillStatus/XML/10400"
 
-# All 25 bills — mirrors legislationData in index.html
+# All 25 base bills — mirrors FALLBACK_DATA in index.html
 BILLS = [
     # 2025 Session — Endorsed
-    {"id": 1, "billNumber": "HB3466", "title": "Affordable Housing Special Assessment Program (AHSAP)", "description": "Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Details IHDA's responsibility in calculating/sharing minimum per sq. ft. expenditure requirements for rehabilitation to qualify. Extends AHSAP to 2037.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Property Taxes", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3466&DocTypeID=HB&LegId=162109&SessionID=114"},
-    {"id": 2, "billNumber": "SB1911", "title": "Affordable Housing Special Assessment Program (Senate)", "description": "Senate companion to HB3466. Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Extends AHSAP to 2037. Governor approved 12/12/25.", "year": [2025], "status": "Passed into law", "type": "Endorsed", "category": "Property Taxes", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1911&DocTypeID=SB&LegId=161199&SessionID=114"},
-    {"id": 3, "billNumber": "SB0062", "title": "Build Illinois Homes Tax Credit Act", "description": "Creates the Build Illinois Homes Tax Credit Act. Qualified developments are low-income housing projects. Upon construction or rehabilitation, IHDA or DOH issues state credit eligibility statements. Allows qualified taxpayers to be awarded tax credits for their development if necessary for financial feasibility. Would create a state match to the federal Low Income Housing Tax Credit.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Affordable Housing Development", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=62&DocTypeID=SB&LegId=157167&SessionID=114"},
-    {"id": 4, "billNumber": "HB2545", "title": "AHPAA Supportive Housing Amendment", "description": "Amends Affordable Housing Planning and Appeals Act. Allows for a broader range of parties to appeal decisions and clarifies timeline for appeals and responses, consequences of failing to respond, and the municipality's burden in responding. Shifts burden of proof onto municipality to demonstrate that a proposed supportive housing project would be detrimental.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "AHPAA", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2545&DocTypeID=HB&LegId=160392&SessionID=114"},
-    {"id": 5, "billNumber": "HB1814", "title": "Missing Middle Housing Act", "description": "Amends zoning division of IL Municipal Code. Requires large cities to allow middle housing development on large lots zoned residential. Requires smaller cities to allow development of at least duplexes on lots allowing detached single family dwellings. Prohibits applicable municipalities from discouraging development or regulating development in an inconsistent manner.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1814&DocTypeID=HB&LegId=159270&SessionID=114"},
-    {"id": 6, "billNumber": "HB1813", "title": "ADU Authorization Act", "description": "Amends the Control Over Building and Construction Article of the IL Municipal Code. Defines accessory dwelling unit and efficiency unit. Prohibits municipalities from prohibiting the building or use of ADUs and prohibits home rule units from acting inconsistently with the Act.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1813&DocTypeID=HB&LegId=159269&SessionID=114"},
-    {"id": 7, "billNumber": "HB3552", "title": "Local Accessory Dwelling Unit Act", "description": "Creates Local Accessory Dwelling Unit Act. Defines accessory dwelling unit, types of units, and discretionary review. Prohibits local governments from prohibiting the building or use of ADUs and sets requirements for ADU application review, timelines, delays, and processing. Prohibits home rule units from acting inconsistently with the Act.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3552&DocTypeID=HB&LegId=162242&SessionID=114"},
-    {"id": 8, "billNumber": "HB1843", "title": "Family Status Housing Protection Act", "description": "Amends the Zoning Division of the IL Municipal Code. Disallows classification, regulation, and restriction on use of property based on family relationship. Prohibits municipalities from adopting zoning regulations that prohibit 2 or more unrelated people from living together, and regulations that prohibit community-integrated living arrangements.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1843&DocTypeID=HB&LegId=159333&SessionID=114"},
-    {"id": 9, "billNumber": "HB3288", "title": "Affordable Communities Act", "description": "Creates the Affordable Communities Act. Clarifies and defines middle housing types. Applies to zoning units with populations over 100,000 and prohibits regulations from preventing middle housing development. Requires these zoning units to adopt land use ordinances and amend zoning maps/ordinances to implement middle housing requirements. Allows IHDA to adopt emergency rules for implementing the Act's requirements.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3288&DocTypeID=HB&LegId=161778&SessionID=114"},
+    {"id": 1,  "billNumber": "HB3466", "title": "Affordable Housing Special Assessment Program (AHSAP)", "description": "Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Details IHDA's responsibility in calculating/sharing minimum per sq. ft. expenditure requirements for rehabilitation to qualify. Extends AHSAP to 2037.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Property Taxes", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3466&DocTypeID=HB&LegId=162109&SessionID=114"},
+    {"id": 2,  "billNumber": "SB1911", "title": "Affordable Housing Special Assessment Program (Senate)", "description": "Senate companion to HB3466. Amends property tax code. Clarifies needed property improvements to remain in special assessment program, allows property to remain in program even if county opts out. Extends AHSAP to 2037. Governor approved 12/12/25.", "year": [2025], "status": "Passed into law", "type": "Endorsed", "category": "Property Taxes", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1911&DocTypeID=SB&LegId=161199&SessionID=114"},
+    {"id": 3,  "billNumber": "SB0062", "title": "Build Illinois Homes Tax Credit Act", "description": "Creates the Build Illinois Homes Tax Credit Act. Qualified developments are low-income housing projects. Upon construction or rehabilitation, IHDA or DOH issues state credit eligibility statements. Allows qualified taxpayers to be awarded tax credits for their development if necessary for financial feasibility. Would create a state match to the federal Low Income Housing Tax Credit.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Affordable Housing Development", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=62&DocTypeID=SB&LegId=157167&SessionID=114"},
+    {"id": 4,  "billNumber": "HB2545", "title": "AHPAA Supportive Housing Amendment", "description": "Amends Affordable Housing Planning and Appeals Act. Allows for a broader range of parties to appeal decisions and clarifies timeline for appeals and responses, consequences of failing to respond, and the municipality's burden in responding. Shifts burden of proof onto municipality to demonstrate that a proposed supportive housing project would be detrimental.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "AHPAA", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2545&DocTypeID=HB&LegId=160392&SessionID=114"},
+    {"id": 5,  "billNumber": "HB1814", "title": "Missing Middle Housing Act", "description": "Amends zoning division of IL Municipal Code. Requires large cities to allow middle housing development on large lots zoned residential. Requires smaller cities to allow development of at least duplexes on lots allowing detached single family dwellings. Prohibits applicable municipalities from discouraging development or regulating development in an inconsistent manner.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1814&DocTypeID=HB&LegId=159270&SessionID=114"},
+    {"id": 6,  "billNumber": "HB1813", "title": "ADU Authorization Act", "description": "Amends the Control Over Building and Construction Article of the IL Municipal Code. Defines accessory dwelling unit and efficiency unit. Prohibits municipalities from prohibiting the building or use of ADUs and prohibits home rule units from acting inconsistently with the Act.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1813&DocTypeID=HB&LegId=159269&SessionID=114"},
+    {"id": 7,  "billNumber": "HB3552", "title": "Local Accessory Dwelling Unit Act", "description": "Creates Local Accessory Dwelling Unit Act. Defines accessory dwelling unit, types of units, and discretionary review. Prohibits local governments from prohibiting the building or use of ADUs and sets requirements for ADU application review, timelines, delays, and processing. Prohibits home rule units from acting inconsistently with the Act.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3552&DocTypeID=HB&LegId=162242&SessionID=114"},
+    {"id": 8,  "billNumber": "HB1843", "title": "Family Status Housing Protection Act", "description": "Amends the Zoning Division of the IL Municipal Code. Disallows classification, regulation, and restriction on use of property based on family relationship. Prohibits municipalities from adopting zoning regulations that prohibit 2 or more unrelated people from living together, and regulations that prohibit community-integrated living arrangements.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1843&DocTypeID=HB&LegId=159333&SessionID=114"},
+    {"id": 9,  "billNumber": "HB3288", "title": "Affordable Communities Act", "description": "Creates the Affordable Communities Act. Clarifies and defines middle housing types. Applies to zoning units with populations over 100,000 and prohibits regulations from preventing middle housing development. Requires these zoning units to adopt land use ordinances and amend zoning maps/ordinances to implement middle housing requirements. Allows IHDA to adopt emergency rules for implementing the Act's requirements.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3288&DocTypeID=HB&LegId=161778&SessionID=114"},
     {"id": 10, "billNumber": "HB1429", "title": "Bill of Rights for the Homeless Act Amendment", "description": "Amends the Bill of Rights for the Homeless Act. Prohibits state and local government from passing rules that fine or criminally penalize people experiencing unsheltered homelessness for engaging in life-sustaining activities (like eating, keeping belongings, and sleeping) on public property. Requires written and oral notice to be given prior to removal at a site. Makes unsheltered homelessness an affirmative defense to charges of violating rules that criminalize occupying or engaging in life-sustaining activities.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Housing", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1429&DocTypeID=HB&LegId=157430&SessionID=114"},
     {"id": 11, "billNumber": "SB2264", "title": "Crime-Free and Nuisance Housing Ordinances Regulation", "description": "Amends the Counties Code, IL Municipal Code, and Housing Authorities Act. Prohibits counties, municipalities, and housing authorities from adopting, enforcing, or implementing regulations affecting a tenancy because of contact with law enforcement or emergency services. Eliminates unfair penalties and evictions of tenants based on alleged criminal or nuisance activity.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Tenant Protections", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2264&DocTypeID=SB&LegId=162041&SessionID=114"},
     {"id": 12, "billNumber": "HB3256", "title": "People Over Parking Act", "description": "Creates the People Over Parking Act. Defines various development projects and parking requirements. Prohibits minimum automobile parking requirements if a project is within 1/2 mile of a public transportation hub. Allows local governments to impose requirements for parking spaces if a project provides parking voluntarily. Prohibits home rule units from acting inconsistently.", "year": [2025, 2026], "status": "Not passed into law", "type": "Endorsed", "category": "Zoning", "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3256&DocTypeID=HB&LegId=161742&SessionID=114"},
@@ -50,7 +55,7 @@ BILLS = [
 
 
 def parse_bill_number(bill_number):
-    """Parse 'HB3466' → ('HB', '3466'), 'SB0062' → ('SB', '0062')."""
+    """Parse 'HB3466' → ('HB', '3466')."""
     m = re.match(r'^([A-Z]+)(\d+)$', bill_number)
     if not m:
         raise ValueError(f"Cannot parse bill number: {bill_number}")
@@ -76,55 +81,31 @@ def fetch_xml(url):
 
 
 def get_last_action_fields(root):
-    """Extract lastAction text and date from <lastaction><action>/<statusdate> structure.
-
-    ILGA XML structure:
-      <lastaction>
-        <statusdate>3/21/2025</statusdate>
-        <chamber>House</chamber>
-        <action>Rule 19(a) / Re-referred to Rules Committee</action>
-      </lastaction>
-    """
+    """Extract lastAction text and date from <lastaction> element."""
     la_el = root.find("lastaction")
     if la_el is None:
         return "", ""
     action_el = la_el.find("action")
-    date_el = la_el.find("statusdate")
-    last_action = (action_el.text or "").strip() if action_el is not None else ""
-    last_action_date = (date_el.text or "").strip() if date_el is not None else ""
+    date_el   = la_el.find("statusdate")
+    last_action      = (action_el.text or "").strip() if action_el is not None else ""
+    last_action_date = (date_el.text   or "").strip() if date_el   is not None else ""
     return last_action, last_action_date
 
 
 def get_primary_sponsor(root):
-    """Extract the chief sponsor name from <sponsor><sponsors> text.
-
-    ILGA XML: sponsors are hyphen-separated, e.g.:
-      "Rep. Will Guzzardi-Abdelnasser Rashid-Martha Deuter, ..."
-    The chief sponsor is the text before the first hyphen.
-    """
+    """Extract the chief sponsor name from <sponsor><sponsors> text."""
     sponsor_el = root.find("sponsor")
     if sponsor_el is None:
         return ""
     sponsors_el = sponsor_el.find("sponsors")
     if sponsors_el is None or not sponsors_el.text:
         return ""
-    # ILGA separates co-sponsors with hyphens, commas, or " and ".
-    # Split on each in turn to isolate the chief sponsor.
-    import re as _re
-    first = _re.split(r'-|,|\s+and\s+', sponsors_el.text.strip())[0].strip()
+    first = re.split(r'-|,|\s+and\s+', sponsors_el.text.strip())[0].strip()
     return first
 
 
 def get_action_texts(root):
-    """Collect all <action> texts from the flat children of <actions>.
-
-    ILGA XML structure (flat siblings, not nested):
-      <actions>
-        <statusdate>...</statusdate><chamber>House</chamber><action>Filed...</action>
-        <statusdate>...</statusdate><chamber>House</chamber><action>First Reading</action>
-        ...
-      </actions>
-    """
+    """Collect all <action> texts from the flat children of <actions>."""
     texts = []
     actions_el = root.find("actions")
     if actions_el is not None:
@@ -134,11 +115,26 @@ def get_action_texts(root):
     return texts
 
 
+def get_next_action(root):
+    """Parse next scheduled action from <nextaction> element.
+
+    Returns (date_str, action_type_str) — both empty strings if not found.
+    """
+    na = root.find("nextaction")
+    if na is not None:
+        date_el   = na.find("statusdate")
+        action_el = na.find("action")
+        if date_el is not None and date_el.text:
+            date_str   = date_el.text.strip()
+            action_str = (action_el.text or "").strip() if action_el is not None else ""
+            return date_str, action_str
+    return "", ""
+
+
 def map_stage(last_action, action_history, doc_type):
     """Map last action + action history to a stage label."""
     la = last_action.lower()
 
-    # Final-outcome stages — check first
     if "approved by governor" in la or "public act" in la:
         return "Signed into Law"
     if "sent to the governor" in la or "to the governor" in la:
@@ -152,71 +148,119 @@ def map_stage(last_action, action_history, doc_type):
     if any(k in la for k in ["vetoed", "failed", "did not pass", "tabled", "withdrawn"]):
         return "Failed"
 
-    # Chamber inference for committee-phase activity.
-    # ILGA uses "Arrive in Senate" / "Arrive in House" for chamber crossings
-    # (not "Passed House" / "Passed Senate", which are the lastaction final-outcome phrases).
     history = " ".join(action_history)
     if "passed house" in history or "arrive in senate" in history:
-        # Bill has crossed to the Senate
         return "In Senate Committee"
     elif "passed senate" in history or "arrive in house" in history:
-        # Bill has crossed to the House
         return "In House Committee"
     else:
-        # Still in originating chamber
         return "In House Committee" if doc_type == "HB" else "In Senate Committee"
+
+
+def _ilga_fields_from_xml(xml_bytes, bill_number, prev_stage, prev_stage_changed_at, fetched_at):
+    """Parse XML bytes and return the computed ILGA fields dict.
+
+    Returns None if XML parsing fails, signalling the caller to use fallback values.
+    """
+    doc_type, _ = parse_bill_number(bill_number)
+    try:
+        root = ET.fromstring(xml_bytes)
+    except ET.ParseError as e:
+        print(f"    WARNING: XML parse error for {bill_number}: {e}", file=sys.stderr)
+        return None
+
+    last_action, last_action_date = get_last_action_fields(root)
+    action_history  = get_action_texts(root)
+    primary_sponsor = get_primary_sponsor(root)
+    new_stage       = map_stage(last_action, action_history, doc_type)
+    next_action_date, next_action_type = get_next_action(root)
+
+    # stageChangedAt: update only if stage has changed
+    if new_stage != prev_stage:
+        stage_changed_at = fetched_at
+    else:
+        stage_changed_at = prev_stage_changed_at or fetched_at
+
+    print(f"    stage={new_stage}  sponsor={primary_sponsor}  lastAction={last_action[:60]}")
+
+    return {
+        "stage":          new_stage,
+        "primarySponsor": primary_sponsor,
+        "lastAction":     last_action,
+        "lastActionDate": last_action_date,
+        "ilgaFetchedAt":  fetched_at,
+        "stageChangedAt": stage_changed_at,
+        "nextActionDate": next_action_date or None,
+        "nextActionType": next_action_type or None,
+    }
 
 
 def process_bill(bill, prev_data):
     """Fetch ILGA XML and return updated bill dict. Falls back to previous data on error."""
     bill_number = bill["billNumber"]
-    doc_type, _ = parse_bill_number(bill_number)
     url = get_xml_url(bill_number)
     print(f"  {bill_number} -> {url}")
 
+    prev         = prev_data.get(bill_number, {})
+    fetched_at   = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    prev_stage   = prev.get("stage")
+    prev_sca     = prev.get("stageChangedAt")
+
     xml_bytes = fetch_xml(url)
     if xml_bytes is None:
-        prev = prev_data.get(bill_number, {})
         return {
             **bill,
-            "stage": prev.get("stage", "Unknown"),
+            "stage":          prev.get("stage",          "Unknown"),
             "primarySponsor": prev.get("primarySponsor", ""),
-            "lastAction": prev.get("lastAction", ""),
+            "lastAction":     prev.get("lastAction",     ""),
             "lastActionDate": prev.get("lastActionDate", ""),
-            "ilgaFetchedAt": prev.get("ilgaFetchedAt", ""),
+            "ilgaFetchedAt":  prev.get("ilgaFetchedAt",  ""),
+            "stageChangedAt": prev.get("stageChangedAt", ""),
+            "nextActionDate": prev.get("nextActionDate"),
+            "nextActionType": prev.get("nextActionType"),
         }
 
-    try:
-        root = ET.fromstring(xml_bytes)
-    except ET.ParseError as e:
-        print(f"    WARNING: XML parse error for {bill_number}: {e}", file=sys.stderr)
-        prev = prev_data.get(bill_number, {})
+    fields = _ilga_fields_from_xml(xml_bytes, bill_number, prev_stage, prev_sca, fetched_at)
+    if fields is None:
         return {
             **bill,
-            "stage": prev.get("stage", "Unknown"),
+            "stage":          prev.get("stage",          "Unknown"),
             "primarySponsor": prev.get("primarySponsor", ""),
-            "lastAction": prev.get("lastAction", ""),
+            "lastAction":     prev.get("lastAction",     ""),
             "lastActionDate": prev.get("lastActionDate", ""),
-            "ilgaFetchedAt": prev.get("ilgaFetchedAt", ""),
+            "ilgaFetchedAt":  prev.get("ilgaFetchedAt",  ""),
+            "stageChangedAt": prev.get("stageChangedAt", ""),
+            "nextActionDate": prev.get("nextActionDate"),
+            "nextActionType": prev.get("nextActionType"),
         }
 
-    last_action, last_action_date = get_last_action_fields(root)
-    action_history = get_action_texts(root)
-    primary_sponsor = get_primary_sponsor(root)
+    return {**bill, **fields}
 
-    stage = map_stage(last_action, action_history, doc_type)
-    fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    print(f"    stage={stage}  sponsor={primary_sponsor}  lastAction={last_action[:60]}")
+def process_user_bill(bill, fetched_at):
+    """Refresh ILGA fields for a user-added bill, preserving user-set fields.
 
-    return {
-        **bill,
-        "stage": stage,
-        "primarySponsor": primary_sponsor,
-        "lastAction": last_action,
-        "lastActionDate": last_action_date,
-        "ilgaFetchedAt": fetched_at,
-    }
+    Preserves: title, description, category, type, userAdded, id, year, status, url.
+    Updates: stage, primarySponsor, lastAction, lastActionDate, ilgaFetchedAt,
+             stageChangedAt, nextActionDate, nextActionType.
+    """
+    bill_number = bill["billNumber"]
+    url = get_xml_url(bill_number)
+    print(f"  [user] {bill_number} -> {url}")
+
+    prev_stage = bill.get("stage")
+    prev_sca   = bill.get("stageChangedAt")
+
+    xml_bytes = fetch_xml(url)
+    if xml_bytes is None:
+        return bill  # keep existing values
+
+    fields = _ilga_fields_from_xml(xml_bytes, bill_number, prev_stage, prev_sca, fetched_at)
+    if fields is None:
+        return bill
+
+    # Merge: start from bill (preserves user fields), overlay with ILGA fields
+    return {**bill, **fields}
 
 
 def load_previous_data(output_path):
@@ -231,13 +275,25 @@ def load_previous_data(output_path):
         return {}
 
 
+def load_user_bills(user_bills_path):
+    """Load user-bills.json; returns empty list if missing or invalid."""
+    if not user_bills_path.exists():
+        return []
+    try:
+        with open(user_bills_path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
 def main():
-    repo_root = Path(__file__).parent.parent
-    output_path = repo_root / "data" / "bills.json"
+    repo_root       = Path(__file__).parent.parent
+    output_path     = repo_root / "data" / "bills.json"
+    user_bills_path = repo_root / "data" / "user-bills.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     prev_data = load_previous_data(output_path)
-    print(f"Updating {len(BILLS)} bills -> {output_path}\n")
+    print(f"Updating {len(BILLS)} base bills -> {output_path}\n")
 
     results = []
     changed = 0
@@ -253,6 +309,18 @@ def main():
         json.dump(results, f, indent=2, ensure_ascii=False)
 
     print(f"\nDone. {changed} bill(s) changed. Written to {output_path}")
+
+    # ── Refresh user-added bills ──────────────────────────────────────────────
+    user_bills = load_user_bills(user_bills_path)
+    if user_bills:
+        print(f"\nRefreshing {len(user_bills)} user-added bill(s) -> {user_bills_path}")
+        fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        updated = [process_user_bill(b, fetched_at) for b in user_bills]
+        with open(user_bills_path, "w", encoding="utf-8") as f:
+            json.dump(updated, f, indent=2, ensure_ascii=False)
+        print(f"Done. Refreshed {len(updated)} user-added bill(s).")
+    else:
+        print("\nNo user-added bills to refresh.")
 
 
 if __name__ == "__main__":
