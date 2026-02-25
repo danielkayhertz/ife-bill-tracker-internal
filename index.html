@@ -1490,11 +1490,23 @@
       const lastAction    = lastActionEl?.textContent?.trim() || '';
       const lastActionDate= lastDateEl?.textContent?.trim() || '';
 
-      // Next scheduled action
-      const nextActionEl   = xml.querySelector('nextaction > action');
-      const nextDateEl     = xml.querySelector('nextaction > statusdate');
-      const nextActionDate = nextDateEl?.textContent?.trim()   || null;
-      const nextActionType = nextActionEl?.textContent?.trim() || null;
+      // Next scheduled action — may be in <nextaction> or <committeehearing>
+      const nextActionEl_  = xml.querySelector('nextaction > action');
+      const nextDateEl_    = xml.querySelector('nextaction > statusdate');
+      let nextActionDate   = nextDateEl_?.textContent?.trim()  || null;
+      let nextActionType   = nextActionEl_?.textContent?.trim()|| null;
+      if (!nextActionDate) {
+        const chEl = xml.querySelector('committeehearing');
+        if (chEl) {
+          const raw = chEl.textContent.trim();
+          const dm  = raw.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2})\s+(\d{4})\b/);
+          if (dm) {
+            const mo = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+            nextActionDate = `${mo[dm[1]]}/${parseInt(dm[2])}/${dm[3]}`;
+            nextActionType = raw.slice(0, dm.index).trim() || null;
+          }
+        }
+      }
 
       // Stage (simplified mirror of Python logic)
       const la = lastAction.toLowerCase();
