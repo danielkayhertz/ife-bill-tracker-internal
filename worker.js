@@ -18,7 +18,7 @@ export default {
     const resp = await fetch(githubUrl, {
       method: request.method,
       headers: {
-        Authorization: `token ${env.GITHUB_TOKEN}`,
+        Authorization: `token ${env.GITHUB_TOKEN_IFE_TRACKER_INTERNAL}`,
         Accept: 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
         'User-Agent': 'ife-bill-tracker-proxy',
