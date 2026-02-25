@@ -115,8 +115,11 @@ def get_action_texts(root):
     return texts
 
 
+MONTH_MAP = {'Jan':'1','Feb':'2','Mar':'3','Apr':'4','May':'5','Jun':'6',
+             'Jul':'7','Aug':'8','Sep':'9','Oct':'10','Nov':'11','Dec':'12'}
+
 def get_next_action(root):
-    """Parse next scheduled action from <nextaction> element.
+    """Parse next scheduled action from <nextaction> or <committeehearing>.
 
     Returns (date_str, action_type_str) — both empty strings if not found.
     """
@@ -128,7 +131,60 @@ def get_next_action(root):
             date_str   = date_el.text.strip()
             action_str = (action_el.text or "").strip() if action_el is not None else ""
             return date_str, action_str
+    # Fallback: <committeehearing> plaintext
+    ch = root.find("committeehearing")
+    if ch is not None and ch.text:
+        raw = ch.text.strip()
+        m = re.search(r'\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2})\s+(\d{4})\b', raw)
+        if m:
+            date_str   = f"{MONTH_MAP[m.group(1)]}/{m.group(2)}/{m.group(3)}"
+            action_str = raw[:m.start()].strip() or ""
+            return date_str, action_str
     return "", ""
+
+
+def get_amendments(root):
+    """Return (last_amendment_name, last_amendment_date, is_shell_bill).
+
+    Parses <synopsis> for the last non-empty <synopsistitle> and its <SynopsisText>.
+    Shell bill = any amendment SynopsisText starts with 'Replaces everything after the enacting clause'.
+    Date = first action in <actions> that mentions the last amendment name.
+    """
+    synopsis_el = root.find("synopsis")
+    last_name = None
+    is_shell  = False
+
+    if synopsis_el is not None:
+        current_title = None
+        for child in synopsis_el:
+            if child.tag == "synopsistitle":
+                t = (child.text or "").strip()
+                if t:
+                    current_title = t
+            elif child.tag == "SynopsisText" and current_title:
+                text = (child.text or "").strip()
+                last_name = current_title
+                if text.startswith("Replaces everything after the enacting clause"):
+                    is_shell = True
+                current_title = None
+
+    last_date = _find_amendment_date(root, last_name) if last_name else None
+    return last_name or None, last_date or None, is_shell
+
+
+def _find_amendment_date(root, amendment_name):
+    """Return date of the first action entry mentioning amendment_name."""
+    actions_el = root.find("actions")
+    if actions_el is None:
+        return None
+    current_date = None
+    for child in actions_el:
+        if child.tag == "statusdate":
+            current_date = (child.text or "").strip()
+        elif child.tag == "action" and amendment_name:
+            if amendment_name.strip() in (child.text or ""):
+                return current_date
+    return None
 
 
 def map_stage(last_action, action_history, doc_type):
@@ -174,6 +230,7 @@ def _ilga_fields_from_xml(xml_bytes, bill_number, prev_stage, prev_stage_changed
     primary_sponsor = get_primary_sponsor(root)
     new_stage       = map_stage(last_action, action_history, doc_type)
     next_action_date, next_action_type = get_next_action(root)
+    last_amendment_name, last_amendment_date, is_shell_bill = get_amendments(root)
 
     # stageChangedAt: update only if stage has changed
     if new_stage != prev_stage:
@@ -184,14 +241,17 @@ def _ilga_fields_from_xml(xml_bytes, bill_number, prev_stage, prev_stage_changed
     print(f"    stage={new_stage}  sponsor={primary_sponsor}  lastAction={last_action[:60]}")
 
     return {
-        "stage":          new_stage,
-        "primarySponsor": primary_sponsor,
-        "lastAction":     last_action,
-        "lastActionDate": last_action_date,
-        "ilgaFetchedAt":  fetched_at,
-        "stageChangedAt": stage_changed_at,
-        "nextActionDate": next_action_date or None,
-        "nextActionType": next_action_type or None,
+        "stage":             new_stage,
+        "primarySponsor":    primary_sponsor,
+        "lastAction":        last_action,
+        "lastActionDate":    last_action_date,
+        "ilgaFetchedAt":     fetched_at,
+        "stageChangedAt":    stage_changed_at,
+        "nextActionDate":    next_action_date or None,
+        "nextActionType":    next_action_type or None,
+        "lastAmendmentName": last_amendment_name,
+        "lastAmendmentDate": last_amendment_date,
+        "isShellBill":       is_shell_bill,
     }
 
 
@@ -210,28 +270,34 @@ def process_bill(bill, prev_data):
     if xml_bytes is None:
         return {
             **bill,
-            "stage":          prev.get("stage",          "Unknown"),
-            "primarySponsor": prev.get("primarySponsor", ""),
-            "lastAction":     prev.get("lastAction",     ""),
-            "lastActionDate": prev.get("lastActionDate", ""),
-            "ilgaFetchedAt":  prev.get("ilgaFetchedAt",  ""),
-            "stageChangedAt": prev.get("stageChangedAt", ""),
-            "nextActionDate": prev.get("nextActionDate"),
-            "nextActionType": prev.get("nextActionType"),
+            "stage":             prev.get("stage",             "Unknown"),
+            "primarySponsor":    prev.get("primarySponsor",    ""),
+            "lastAction":        prev.get("lastAction",        ""),
+            "lastActionDate":    prev.get("lastActionDate",    ""),
+            "ilgaFetchedAt":     prev.get("ilgaFetchedAt",     ""),
+            "stageChangedAt":    prev.get("stageChangedAt",    ""),
+            "nextActionDate":    prev.get("nextActionDate"),
+            "nextActionType":    prev.get("nextActionType"),
+            "lastAmendmentName": prev.get("lastAmendmentName"),
+            "lastAmendmentDate": prev.get("lastAmendmentDate"),
+            "isShellBill":       prev.get("isShellBill",       False),
         }
 
     fields = _ilga_fields_from_xml(xml_bytes, bill_number, prev_stage, prev_sca, fetched_at)
     if fields is None:
         return {
             **bill,
-            "stage":          prev.get("stage",          "Unknown"),
-            "primarySponsor": prev.get("primarySponsor", ""),
-            "lastAction":     prev.get("lastAction",     ""),
-            "lastActionDate": prev.get("lastActionDate", ""),
-            "ilgaFetchedAt":  prev.get("ilgaFetchedAt",  ""),
-            "stageChangedAt": prev.get("stageChangedAt", ""),
-            "nextActionDate": prev.get("nextActionDate"),
-            "nextActionType": prev.get("nextActionType"),
+            "stage":             prev.get("stage",             "Unknown"),
+            "primarySponsor":    prev.get("primarySponsor",    ""),
+            "lastAction":        prev.get("lastAction",        ""),
+            "lastActionDate":    prev.get("lastActionDate",    ""),
+            "ilgaFetchedAt":     prev.get("ilgaFetchedAt",     ""),
+            "stageChangedAt":    prev.get("stageChangedAt",    ""),
+            "nextActionDate":    prev.get("nextActionDate"),
+            "nextActionType":    prev.get("nextActionType"),
+            "lastAmendmentName": prev.get("lastAmendmentName"),
+            "lastAmendmentDate": prev.get("lastAmendmentDate"),
+            "isShellBill":       prev.get("isShellBill",       False),
         }
 
     return {**bill, **fields}

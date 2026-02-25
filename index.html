@@ -287,9 +287,10 @@
       font-weight: 600;
     }
 
-    .tag.user-added {
-      background-color: #e8f5e9;
-      color: #2e7d32;
+    .tag.shell-bill {
+      background-color: #fff8e1;
+      color: #e65100;
+      font-weight: 700;
     }
 
     .bill-number {
@@ -411,6 +412,9 @@
     }
     .card-next-action-label { font-weight: 600; margin-right: 2px; }
     .card-next-action-date  { font-weight: 600; }
+    .card-last-amendment { font-size: 12px; color: #888; margin: 0 0 4px 0; line-height: 1.4; }
+    .card-last-amendment-label { font-weight: 600; color: #666; }
+    .card-last-amendment-date  { font-weight: 600; color: #666; }
 
     /* Empty State */
     .empty-state {
@@ -930,6 +934,10 @@
             <div class="info-box-label">Next Action</div>
             <div class="info-box-value" id="modal-next-action"></div>
           </div>
+          <div class="info-box session" id="modal-amendment-box" style="display:none;">
+            <div class="info-box-label">Last Amendment</div>
+            <div class="info-box-value" id="modal-amendment"></div>
+          </div>
         </div>
         <div class="modal-last-action" id="modal-last-action-section" style="display:none;">
           <p><strong>Last Action:</strong> <span id="modal-last-action"></span></p>
@@ -1263,7 +1271,7 @@
           <div class="card-tags">
             <span class="tag ${typeClass}">${bill.type}</span>
             <span class="tag category">${bill.category}</span>
-            ${bill.userAdded ? '<span class="tag user-added">Added</span>' : ''}
+            ${bill.isShellBill ? '<span class="tag shell-bill">Shell Bill</span>' : ''}
           </div>
           <div class="bill-number">
             ${bill.billNumber}
@@ -1282,6 +1290,12 @@
             <span class="card-next-action-label">Next:</span>
             <span class="card-next-action-date">${bill.nextActionDate}</span>
             ${bill.nextActionType ? ` — ${bill.nextActionType}` : ''}
+          </p>` : ''}
+          ${bill.lastAmendmentName ? `
+          <p class="card-last-amendment">
+            <span class="card-last-amendment-label">Amdt:</span>
+            ${bill.lastAmendmentDate ? `<span class="card-last-amendment-date"> ${bill.lastAmendmentDate}</span> —` : ''}
+            ${bill.lastAmendmentName}
           </p>` : ''}
           <div class="card-footer">
             <span class="status-badge" style="background-color:${stageStyle.bg};color:${stageStyle.text};border:1px solid ${stageStyle.border};">${stage}</span>
@@ -1303,7 +1317,7 @@
       document.getElementById('modal-tags').innerHTML = `
         <span class="modal-tag">${bill.type}</span>
         <span class="modal-tag">${bill.category}</span>
-        ${bill.userAdded ? '<span class="modal-tag">User Added</span>' : ''}
+        ${bill.isShellBill ? '<span class="modal-tag" style="background:rgba(230,81,0,0.25);">Shell Bill</span>' : ''}
       `;
       document.getElementById('modal-bill-number').textContent = bill.billNumber;
       document.getElementById('modal-bill-title').textContent  = bill.title;
@@ -1325,6 +1339,16 @@
         document.getElementById('modal-next-action').textContent = naText;
       } else {
         nextActionBox.style.display = 'none';
+      }
+
+      // Amendment info box
+      const amendBox = document.getElementById('modal-amendment-box');
+      if (bill.lastAmendmentName) {
+        const txt = (bill.lastAmendmentDate ? bill.lastAmendmentDate + ' — ' : '') + bill.lastAmendmentName;
+        document.getElementById('modal-amendment').textContent = txt;
+        amendBox.style.display = 'block';
+      } else {
+        amendBox.style.display = 'none';
       }
 
       // Last action
@@ -1392,13 +1416,16 @@
       try {
         const data = await fetchBillFromILGA(currentBill.billNumber);
         const updates = {
-          primarySponsor: data.primarySponsor,
-          stage:          data.stage,
-          lastAction:     data.lastAction,
-          lastActionDate: data.lastActionDate,
-          nextActionDate: data.nextActionDate,
-          nextActionType: data.nextActionType,
-          ilgaFetchedAt:  new Date().toISOString(),
+          primarySponsor:    data.primarySponsor,
+          stage:             data.stage,
+          lastAction:        data.lastAction,
+          lastActionDate:    data.lastActionDate,
+          nextActionDate:    data.nextActionDate,
+          nextActionType:    data.nextActionType,
+          lastAmendmentName: data.lastAmendmentName,
+          lastAmendmentDate: data.lastAmendmentDate,
+          isShellBill:       data.isShellBill,
+          ilgaFetchedAt:     new Date().toISOString(),
         };
         const { content, sha } = await readGitHubFile('data/user-bills.json');
         const userBills = (content || []).map(b =>
@@ -1508,6 +1535,37 @@
         }
       }
 
+      // Amendments
+      const synopsisEl = xml.querySelector('synopsis');
+      let lastAmendmentName = null, isShellBill = false;
+      if (synopsisEl) {
+        let currentTitle = null;
+        for (const child of synopsisEl.children) {
+          if (child.tagName === 'synopsistitle') {
+            const t = child.textContent.trim();
+            if (t) currentTitle = t;
+          } else if (child.tagName === 'SynopsisText' && currentTitle) {
+            lastAmendmentName = currentTitle;
+            if (child.textContent.trim().startsWith('Replaces everything after the enacting clause'))
+              isShellBill = true;
+            currentTitle = null;
+          }
+        }
+      }
+      let lastAmendmentDate = null;
+      if (lastAmendmentName) {
+        const actionsEl = xml.querySelector('actions');
+        if (actionsEl) {
+          let cur = null;
+          for (const child of actionsEl.children) {
+            if (child.tagName === 'statusdate') cur = child.textContent.trim();
+            else if (child.tagName === 'action' && child.textContent.includes(lastAmendmentName.trim())) {
+              lastAmendmentDate = cur; break;
+            }
+          }
+        }
+      }
+
       // Stage (simplified mirror of Python logic)
       const la = lastAction.toLowerCase();
       let stage;
@@ -1523,7 +1581,8 @@
       return {
         billNumber: rawBillNumber.trim().toUpperCase(),
         primarySponsor, stage, lastAction, lastActionDate,
-        nextActionDate, nextActionType, ilgaUrl
+        nextActionDate, nextActionType, ilgaUrl,
+        lastAmendmentName, lastAmendmentDate, isShellBill
       };
     }
 
@@ -1640,9 +1699,12 @@
         lastActionDate:  addBillIlgaData?.lastActionDate   || '',
         ilgaFetchedAt:   addBillIlgaData ? new Date().toISOString() : '',
         stageChangedAt:  null,
-        nextActionDate:  addBillIlgaData?.nextActionDate  || null,
-        nextActionType:  addBillIlgaData?.nextActionType  || null,
-        userAdded:       true
+        nextActionDate:    addBillIlgaData?.nextActionDate    || null,
+        nextActionType:    addBillIlgaData?.nextActionType    || null,
+        lastAmendmentName: addBillIlgaData?.lastAmendmentName || null,
+        lastAmendmentDate: addBillIlgaData?.lastAmendmentDate || null,
+        isShellBill:       addBillIlgaData?.isShellBill       || false,
+        userAdded:         true
       };
 
       try {
