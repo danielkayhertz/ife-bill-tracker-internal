@@ -225,6 +225,12 @@
       font-family: inherit;
     }
     .refresh-all-btn:hover { background: rgba(255,255,255,0.25); }
+    .header-last-refreshed {
+      display: block;
+      margin-top: 6px;
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+    }
 
     /* Main Grid */
     .main-content {
@@ -835,6 +841,7 @@
       <h1>IFE Internal Bill Tracker</h1>
       <p>Shared notes, custom bill tracking, and real-time stage monitoring for the Illinois housing legislative agenda</p>
       <button class="refresh-all-btn" onclick="refreshAllFromILGA()">↻ Refresh from ILGA</button>
+      <small id="header-last-refreshed" class="header-last-refreshed"></small>
     </div>
   </header>
 
@@ -1234,11 +1241,17 @@
     }
 
     function updateLastFetched() {
-      const el = document.getElementById('last-updated');
-      if (!el) return;
       const date = legislationData[0]?.ilgaFetchedAt;
-      if (date) {
-        el.textContent = 'Status updated ' + new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      if (!date) return;
+      const d = new Date(date);
+      const el = document.getElementById('last-updated');
+      if (el) {
+        el.textContent = 'Status updated ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+      const headerEl = document.getElementById('header-last-refreshed');
+      if (headerEl) {
+        headerEl.textContent = 'Last refreshed ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          + ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
       }
     }
 
