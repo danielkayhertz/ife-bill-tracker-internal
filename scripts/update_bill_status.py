@@ -170,15 +170,78 @@ def fetch_xml(url):
 
 
 def get_last_action_fields(root):
-    """Extract lastAction text and date from <lastaction> element."""
+    """Extract lastAction text, date, and chamber from <lastaction> element.
+
+    Returns a 3-tuple: (last_action, last_action_date, last_action_chamber).
+    """
     la_el = root.find("lastaction")
     if la_el is None:
-        return "", ""
-    action_el = la_el.find("action")
-    date_el   = la_el.find("statusdate")
-    last_action      = (action_el.text or "").strip() if action_el is not None else ""
-    last_action_date = (date_el.text   or "").strip() if date_el   is not None else ""
-    return last_action, last_action_date
+        return "", "", ""
+    action_el  = la_el.find("action")
+    date_el    = la_el.find("statusdate")
+    chamber_el = la_el.find("chamber")
+    last_action         = (action_el.text  or "").strip() if action_el  is not None else ""
+    last_action_date    = (date_el.text    or "").strip() if date_el    is not None else ""
+    last_action_chamber = (chamber_el.text or "").strip() if chamber_el is not None else ""
+    return last_action, last_action_date, last_action_chamber
+
+
+def _parse_action_date(date_str):
+    """Parse M/D/YYYY date string to (year, month, day) tuple for comparison.
+
+    Returns None if parsing fails.
+    """
+    if not date_str:
+        return None
+    parts = date_str.split("/")
+    if len(parts) != 3:
+        return None
+    try:
+        m, d, y = int(parts[0]), int(parts[1]), int(parts[2])
+        return (y, m, d)
+    except ValueError:
+        return None
+
+
+def get_latest_action_from_history(root):
+    """Walk <actions> siblings and return the most recent substantive action.
+
+    Skips entries whose text starts with 'Added as ', 'Removed as ', or 'Alternate'.
+    Returns (action_text, date_str, chamber_str) — all empty strings if not found.
+    """
+    actions_el = root.find("actions")
+    if actions_el is None:
+        return "", "", ""
+
+    SKIP_PREFIXES = ("added as ", "removed as ", "alternate")
+
+    current_date    = ""
+    current_chamber = ""
+    latest_action   = ""
+    latest_date     = ""
+    latest_chamber  = ""
+    latest_parsed   = None
+
+    for child in actions_el:
+        tag = child.tag.lower()
+        if tag == "statusdate":
+            current_date = (child.text or "").strip()
+        elif tag == "chamber":
+            current_chamber = (child.text or "").strip()
+        elif tag == "action":
+            text = (child.text or "").strip()
+            if not text:
+                continue
+            if any(text.lower().startswith(p) for p in SKIP_PREFIXES):
+                continue
+            parsed = _parse_action_date(current_date)
+            if parsed is not None and (latest_parsed is None or parsed >= latest_parsed):
+                latest_action  = text
+                latest_date    = current_date
+                latest_chamber = current_chamber
+                latest_parsed  = parsed
+
+    return latest_action, latest_date, latest_chamber
 
 
 def get_primary_sponsor(root):
@@ -276,9 +339,10 @@ def _find_amendment_date(root, amendment_name):
     return None
 
 
-def map_stage(last_action, action_history, doc_type):
+def map_stage(last_action, action_history, doc_type, last_action_chamber=""):
     """Map last action + action history to a stage label."""
-    la = last_action.lower()
+    la      = last_action.lower()
+    chamber = last_action_chamber.lower()
 
     if "approved by governor" in la or "public act" in la:
         return "Signed into Law"
@@ -292,6 +356,19 @@ def map_stage(last_action, action_history, doc_type):
         return "Passed House"
     if any(k in la for k in ["vetoed", "failed", "did not pass", "tabled", "withdrawn"]):
         return "Failed"
+
+    # ILGA vote-count format: "Third Reading - Short Debate - Passed 081-022-000"
+    if re.search(r'\bpassed\s+\d{3}-\d{3}-\d{3}\b', la):
+        if chamber == "house":
+            return "Passed House"
+        elif chamber == "senate":
+            return "Passed Senate"
+
+    # Chamber-crossing: last substantive action was in the opposite chamber
+    if chamber == "senate" and doc_type == "HB":
+        return "In Senate Committee"
+    if chamber == "house" and doc_type == "SB":
+        return "In House Committee"
 
     history = " ".join(action_history)
     if "passed house" in history or "arrive in senate" in history:
@@ -314,10 +391,20 @@ def _ilga_fields_from_xml(xml_bytes, bill_number, prev_stage, prev_stage_changed
         print(f"    WARNING: XML parse error for {bill_number}: {e}", file=sys.stderr)
         return None
 
-    last_action, last_action_date = get_last_action_fields(root)
+    last_action, last_action_date, last_action_chamber = get_last_action_fields(root)
+
+    # Freshness fallback: if <actions> history has a more recent substantive action
+    # than <lastaction> (ILGA XML sometimes lags on fast-moving bills), use it instead.
+    hist_action, hist_date, hist_chamber = get_latest_action_from_history(root)
+    if hist_date and last_action_date:
+        if _parse_action_date(hist_date) > _parse_action_date(last_action_date):
+            last_action         = hist_action
+            last_action_date    = hist_date
+            last_action_chamber = hist_chamber
+
     action_history  = get_action_texts(root)
     primary_sponsor = get_primary_sponsor(root)
-    new_stage       = map_stage(last_action, action_history, doc_type)
+    new_stage       = map_stage(last_action, action_history, doc_type, last_action_chamber)
     next_action_date, next_action_type = get_next_action(root)
     last_amendment_name, last_amendment_date, is_shell_bill = get_amendments(root)
 

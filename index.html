@@ -1742,11 +1742,50 @@
       const sponsorsEl = xml.querySelector('sponsor > sponsors');
       const primarySponsor = sponsorsEl?.textContent?.trim().split(/[-,]|\s+and\s+/)[0]?.trim() || '';
 
-      // Last action
-      const lastActionEl  = xml.querySelector('lastaction > action');
-      const lastDateEl    = xml.querySelector('lastaction > statusdate');
-      const lastAction    = lastActionEl?.textContent?.trim() || '';
-      const lastActionDate= lastDateEl?.textContent?.trim() || '';
+      // Last action (with freshness fallback from <actions> history)
+      const lastActionEl   = xml.querySelector('lastaction > action');
+      const lastDateEl     = xml.querySelector('lastaction > statusdate');
+      const lastChamberEl  = xml.querySelector('lastaction > chamber');
+      let lastAction       = lastActionEl?.textContent?.trim() || '';
+      let lastActionDate   = lastDateEl?.textContent?.trim()   || '';
+      let lastActionChamber= (lastChamberEl?.textContent?.trim() || '').toLowerCase();
+
+      // Walk <actions> to find the most recent substantive action; substitute if newer
+      {
+        const SKIP = ['added as ', 'removed as ', 'alternate'];
+        function _parseActDate(s) {
+          if (!s) return null;
+          const p = s.split('/');
+          if (p.length !== 3) return null;
+          return [parseInt(p[2]), parseInt(p[0]), parseInt(p[1])]; // [y,m,d]
+        }
+        function _cmpDate(a, b) {
+          if (!a || !b) return 0;
+          for (let i = 0; i < 3; i++) { if (a[i] !== b[i]) return a[i] - b[i]; }
+          return 0;
+        }
+        const actionsEl = xml.querySelector('actions');
+        if (actionsEl) {
+          let curDate = '', curChamber = '', bestAction = '', bestDate = '', bestChamber = '', bestParsed = null;
+          for (const child of actionsEl.children) {
+            if (child.tagName === 'statusdate') { curDate = child.textContent.trim(); }
+            else if (child.tagName === 'chamber') { curChamber = child.textContent.trim(); }
+            else if (child.tagName === 'action') {
+              const t = child.textContent.trim();
+              if (!t || SKIP.some(p => t.toLowerCase().startsWith(p))) continue;
+              const parsed = _parseActDate(curDate);
+              if (parsed && (bestParsed === null || _cmpDate(parsed, bestParsed) >= 0)) {
+                bestAction = t; bestDate = curDate; bestChamber = curChamber; bestParsed = parsed;
+              }
+            }
+          }
+          if (bestDate && _cmpDate(_parseActDate(bestDate), _parseActDate(lastActionDate)) > 0) {
+            lastAction        = bestAction;
+            lastActionDate    = bestDate;
+            lastActionChamber = bestChamber.toLowerCase();
+          }
+        }
+      }
 
       // Next scheduled action — may be in <nextaction> or <committeehearing>
       const nextActionEl_  = xml.querySelector('nextaction > action');
@@ -1797,7 +1836,7 @@
         }
       }
 
-      // Stage (simplified mirror of Python logic)
+      // Stage (mirrors Python map_stage logic)
       const la = lastAction.toLowerCase();
       let stage;
       if      (la.includes('approved by governor') || la.includes('public act')) stage = 'Signed into Law';
@@ -1805,8 +1844,32 @@
       else if (la.includes('enrolled'))                                          stage = 'Enrolled';
       else if (la.includes('passed senate'))                                     stage = 'Passed Senate';
       else if (la.includes('passed house'))                                      stage = 'Passed House';
-      else if (la.includes('vetoed') || la.includes('failed') || la.includes('tabled') || la.includes('withdrawn')) stage = 'Failed';
-      else stage = docType === 'HB' ? 'In House Committee' : 'In Senate Committee';
+      else if (/passed\s+\d{3}-\d{3}-\d{3}/.test(la)) {
+        // ILGA vote-count format: "Third Reading - Short Debate - Passed 081-022-000"
+        stage = lastActionChamber === 'house' ? 'Passed House' : 'Passed Senate';
+      } else if (la.includes('vetoed') || la.includes('failed') || la.includes('tabled') || la.includes('withdrawn')) {
+        stage = 'Failed';
+      } else if (lastActionChamber === 'senate' && docType === 'HB') {
+        stage = 'In Senate Committee';
+      } else if (lastActionChamber === 'house' && docType === 'SB') {
+        stage = 'In House Committee';
+      } else {
+        // History fallback: walk <actions> siblings
+        const actionsElS = xml.querySelector('actions');
+        let histText = '';
+        if (actionsElS) {
+          for (const child of actionsElS.children) {
+            if (child.tagName === 'action') histText += ' ' + child.textContent.toLowerCase();
+          }
+        }
+        if (histText.includes('arrive in senate') || histText.includes('passed house')) {
+          stage = 'In Senate Committee';
+        } else if (histText.includes('arrive in house') || histText.includes('passed senate')) {
+          stage = 'In House Committee';
+        } else {
+          stage = docType === 'HB' ? 'In House Committee' : 'In Senate Committee';
+        }
+      }
 
       const ilgaUrl = `https://www.ilga.gov/Legislation/BillStatus?DocNum=${m[2]}&GAID=18&DocTypeID=${docType}&SessionID=114`;
       return {
