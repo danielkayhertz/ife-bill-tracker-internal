@@ -1376,7 +1376,7 @@
             <span class="card-last-action-date">${bill.lastActionDate}</span>
             ${bill.lastAction ? ` — ${bill.lastAction}` : ''}
           </p>` : ''}
-          ${bill.nextActionDate ? `
+          ${bill.nextActionDate && toIsoDate(bill.nextActionDate) >= new Date().toISOString().split('T')[0] ? `
           <p class="card-next-action">
             <span class="card-next-action-label">Next:</span>
             <span class="card-next-action-date">${bill.nextActionDate}</span>
@@ -1424,7 +1424,8 @@
 
       // Next action box
       const nextActionBox = document.getElementById('modal-next-action-box');
-      if (bill.nextActionDate) {
+      const nextIso = toIsoDate(bill.nextActionDate);
+      if (nextIso && nextIso >= new Date().toISOString().split('T')[0]) {
         nextActionBox.style.display = 'block';
         const naText = bill.nextActionDate + (bill.nextActionType ? ` — ${bill.nextActionType}` : '');
         document.getElementById('modal-next-action').textContent = naText;
