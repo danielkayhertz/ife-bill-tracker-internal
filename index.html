@@ -1145,6 +1145,8 @@
       "Enrolled":                    { bg: "#c8e6c9", text: "#2e7d32", border: "#66bb6a" },
       "Passed House":                { bg: "#f0f7f0", text: "#2e7d32", border: "#a5d6a7" },
       "Passed Senate":               { bg: "#f0f7f0", text: "#2e7d32", border: "#a5d6a7" },
+      "Passed House Committee":      { bg: "#e3f2fd", text: "#1565c0", border: "#90caf9" },
+      "Passed Senate Committee":     { bg: "#e3f2fd", text: "#1565c0", border: "#90caf9" },
       "In House Committee":          { bg: "#f5f5f5", text: "#616161", border: "#bdbdbd" },
       "In Senate Committee":         { bg: "#efefef", text: "#616161", border: "#bdbdbd" },
       "Failed":                      { bg: "#fce4ec", text: "#b71c1c", border: "#ef9a9a" },
@@ -1849,6 +1851,12 @@
         stage = lastActionChamber === 'house' ? 'Passed House' : 'Passed Senate';
       } else if (la.includes('vetoed') || la.includes('failed') || la.includes('tabled') || la.includes('withdrawn')) {
         stage = 'Failed';
+      } else if (['placed on calendar order of 2nd reading',
+                  'placed on calendar order of 3rd reading',
+                  'second reading', 'third reading',
+                  'do pass', 'approved for consideration',
+                  'recalled from committee'].some(s => la.includes(s))) {
+        stage = lastActionChamber === 'house' ? 'Passed House Committee' : 'Passed Senate Committee';
       } else if (lastActionChamber === 'senate' && docType === 'HB') {
         stage = 'In Senate Committee';
       } else if (lastActionChamber === 'house' && docType === 'SB') {

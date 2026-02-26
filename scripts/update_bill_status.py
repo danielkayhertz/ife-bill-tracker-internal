@@ -364,6 +364,22 @@ def map_stage(last_action, action_history, doc_type, last_action_chamber=""):
         elif chamber == "senate":
             return "Passed Senate"
 
+    # Floor-stage signals: bill has cleared committee and is on the chamber floor
+    FLOOR_SIGNALS = (
+        "placed on calendar order of 2nd reading",
+        "placed on calendar order of 3rd reading",
+        "second reading",
+        "third reading",
+        "do pass",
+        "approved for consideration",
+        "recalled from committee",
+    )
+    if any(s in la for s in FLOOR_SIGNALS):
+        if chamber == "house":
+            return "Passed House Committee"
+        elif chamber == "senate":
+            return "Passed Senate Committee"
+
     # Chamber-crossing: last substantive action was in the opposite chamber
     if chamber == "senate" and doc_type == "HB":
         return "In Senate Committee"
