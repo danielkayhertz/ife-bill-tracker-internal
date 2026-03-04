@@ -12,6 +12,7 @@
     "type": "Endorsed",
     "category": "Property Taxes",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3466&DocTypeID=HB&LegId=162109&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Will Guzzardi",
     "lastAction": "Added Co-Sponsor Rep. Aarón M. Ortíz",
@@ -21,8 +22,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:36.750Z",
-    "stageChangedAt": "2026-03-04T22:47:36.750Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.059Z",
+    "stageChangedAt": "2026-03-04T23:13:01.059Z"
   },
   {
     "id": 2,
@@ -36,6 +37,7 @@
     "type": "Endorsed",
     "category": "Property Taxes",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1911&DocTypeID=SB&LegId=161199&SessionID=114",
+    "programArea": "Housing",
     "stage": "Signed into Law",
     "primarySponsor": "Sen. Elgie R. Sims",
     "lastAction": "Public Act . . . . . . . . . 104-0453",
@@ -45,8 +47,8 @@
     "lastAmendmentName": "House Floor Amendment No. 4",
     "lastAmendmentDate": "10/30/2025",
     "isShellBill": true,
-    "ilgaFetchedAt": "2026-03-04T22:47:36.866Z",
-    "stageChangedAt": "2026-03-04T22:47:36.866Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.095Z",
+    "stageChangedAt": "2026-03-04T23:13:01.095Z"
   },
   {
     "id": 3,
@@ -61,6 +63,7 @@
     "type": "Endorsed",
     "category": "Affordable Housing Development",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=62&DocTypeID=SB&LegId=157167&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Sen. Robert Peters",
     "lastAction": "Re-assigned to Revenue",
@@ -70,8 +73,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:36.980Z",
-    "stageChangedAt": "2026-03-04T22:47:36.980Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.157Z",
+    "stageChangedAt": "2026-03-04T23:13:01.157Z"
   },
   {
     "id": 4,
@@ -86,6 +89,7 @@
     "type": "Endorsed",
     "category": "AHPAA",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2545&DocTypeID=HB&LegId=160392&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Rep. Will Guzzardi",
     "lastAction": "Rule 3-9(a) / Re-referred to Assignments",
@@ -95,8 +99,8 @@
     "lastAmendmentName": "House Committee Amendment No. 1",
     "lastAmendmentDate": "3/5/2025",
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:37.085Z",
-    "stageChangedAt": "2026-03-04T22:47:37.085Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.199Z",
+    "stageChangedAt": "2026-03-04T23:13:01.199Z"
   },
   {
     "id": 5,
@@ -111,6 +115,7 @@
     "type": "Endorsed",
     "category": "Zoning",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1814&DocTypeID=HB&LegId=159270&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Robert \"Bob\" Rita",
     "lastAction": "Added Co-Sponsor Rep. Kimberly Du Buclet",
@@ -120,8 +125,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:37.193Z",
-    "stageChangedAt": "2026-03-04T22:47:37.193Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.231Z",
+    "stageChangedAt": "2026-03-04T23:13:01.231Z"
   },
   {
     "id": 6,
@@ -136,6 +141,7 @@
     "type": "Endorsed",
     "category": "Zoning",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1813&DocTypeID=HB&LegId=159269&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Robert \"Bob\" Rita",
     "lastAction": "Added Co-Sponsor Rep. Kimberly Du Buclet",
@@ -145,8 +151,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:37.302Z",
-    "stageChangedAt": "2026-03-04T22:47:37.302Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.270Z",
+    "stageChangedAt": "2026-03-04T23:13:01.270Z"
   },
   {
     "id": 7,
@@ -161,6 +167,7 @@
     "type": "Endorsed",
     "category": "Zoning",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3552&DocTypeID=HB&LegId=162242&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Kam Buckner",
     "lastAction": "Added Co-Sponsor Rep. Amy Briel",
@@ -170,8 +177,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:37.411Z",
-    "stageChangedAt": "2026-03-04T22:47:37.411Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.307Z",
+    "stageChangedAt": "2026-03-04T23:13:01.307Z"
   },
   {
     "id": 8,
@@ -186,6 +193,7 @@
     "type": "Endorsed",
     "category": "Zoning",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1843&DocTypeID=HB&LegId=159333&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Rep. Suzanne M. Ness",
     "lastAction": "Added Co-Sponsor Rep. Diane Blair-Sherlock",
@@ -195,8 +203,8 @@
     "lastAmendmentName": "House Floor Amendment No. 1",
     "lastAmendmentDate": "4/8/2025",
     "isShellBill": true,
-    "ilgaFetchedAt": "2026-03-04T22:47:37.537Z",
-    "stageChangedAt": "2026-03-04T22:47:37.537Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.339Z",
+    "stageChangedAt": "2026-03-04T23:13:01.339Z"
   },
   {
     "id": 9,
@@ -211,6 +219,7 @@
     "type": "Endorsed",
     "category": "Zoning",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3288&DocTypeID=HB&LegId=161778&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Kam Buckner",
     "lastAction": "Added Co-Sponsor Rep. Hoan Huynh",
@@ -220,8 +229,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:37.644Z",
-    "stageChangedAt": "2026-03-04T22:47:37.644Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.378Z",
+    "stageChangedAt": "2026-03-04T23:13:01.378Z"
   },
   {
     "id": 10,
@@ -236,6 +245,7 @@
     "type": "Endorsed",
     "category": "Housing",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=1429&DocTypeID=HB&LegId=157430&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Kevin John Olickal",
     "lastAction": "Added Co-Sponsor Rep. Camille Y. Lilly",
@@ -245,8 +255,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:37.763Z",
-    "stageChangedAt": "2026-03-04T22:47:37.763Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.411Z",
+    "stageChangedAt": "2026-03-04T23:13:01.411Z"
   },
   {
     "id": 11,
@@ -261,6 +271,7 @@
     "type": "Endorsed",
     "category": "Tenant Protections",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2264&DocTypeID=SB&LegId=162041&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Sen. Karina Villa",
     "lastAction": "Rule 3-9(a) / Re-referred to Assignments",
@@ -270,8 +281,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:37.880Z",
-    "stageChangedAt": "2026-03-04T22:47:37.880Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.443Z",
+    "stageChangedAt": "2026-03-04T23:13:01.443Z"
   },
   {
     "id": 12,
@@ -286,6 +297,7 @@
     "type": "Endorsed",
     "category": "Zoning",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3256&DocTypeID=HB&LegId=161742&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Kam Buckner",
     "lastAction": "Rule 19(a) / Re-referred to Rules Committee",
@@ -295,8 +307,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:37.997Z",
-    "stageChangedAt": "2026-03-04T22:47:37.997Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.476Z",
+    "stageChangedAt": "2026-03-04T23:13:01.476Z"
   },
   {
     "id": 13,
@@ -311,6 +323,7 @@
     "type": "Endorsed",
     "category": "Zoning",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2352&DocTypeID=SB&LegId=162316&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Sen. Mike Simmons",
     "lastAction": "Referred to Assignments",
@@ -320,8 +333,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:38.083Z",
-    "stageChangedAt": "2026-03-04T22:47:38.083Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.514Z",
+    "stageChangedAt": "2026-03-04T23:13:01.514Z"
   },
   {
     "id": 14,
@@ -335,6 +348,7 @@
     "type": "Endorsed",
     "category": "Transportation",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=2111&DocTypeID=SB&LegId=161644&SessionID=114",
+    "programArea": "Housing",
     "stage": "Signed into Law",
     "primarySponsor": "Sen. Ram Villivalam",
     "lastAction": "Public Act . . . . . . . . . 104-0457",
@@ -344,8 +358,8 @@
     "lastAmendmentName": "House Floor Amendment No. 4",
     "lastAmendmentDate": "10/30/2025",
     "isShellBill": true,
-    "ilgaFetchedAt": "2026-03-04T22:47:38.215Z",
-    "stageChangedAt": "2026-03-04T22:47:38.215Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.564Z",
+    "stageChangedAt": "2026-03-04T23:13:01.564Z"
   },
   {
     "id": 15,
@@ -360,6 +374,7 @@
     "type": "Endorsed",
     "category": "Transportation",
     "url": "https://www.ilga.gov/Legislation/BillStatus?GAID=18&DocNum=3438&DocTypeID=HB&LegId=162067&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Rep. Jaime M. Andrade",
     "lastAction": "Removed Co-Sponsor Rep. Katie Stuart",
@@ -369,8 +384,8 @@
     "lastAmendmentName": "Senate Floor Amendment No. 5",
     "lastAmendmentDate": "5/31/2025",
     "isShellBill": true,
-    "ilgaFetchedAt": "2026-03-04T22:47:38.329Z",
-    "stageChangedAt": "2026-03-04T22:47:38.329Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.600Z",
+    "stageChangedAt": "2026-03-04T23:13:01.600Z"
   },
   {
     "id": 16,
@@ -384,6 +399,7 @@
     "type": "Sponsored",
     "category": "Public Housing",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=4377&GAID=18&DocTypeID=HB&LegId=164950&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Maurice A. West",
     "lastAction": "Assigned to Housing Committee",
@@ -393,8 +409,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:38.394Z",
-    "stageChangedAt": "2026-03-04T22:47:38.394Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.628Z",
+    "stageChangedAt": "2026-03-04T23:13:01.628Z"
   },
   {
     "id": 17,
@@ -408,6 +424,7 @@
     "type": "Sponsored",
     "category": "Public Housing",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=3084&GAID=18&DocTypeID=SB&LegId=165665&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Sen. Ram Villivalam",
     "lastAction": "Assigned to Executive",
@@ -417,8 +434,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:38.497Z",
-    "stageChangedAt": "2026-03-04T22:47:38.497Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.660Z",
+    "stageChangedAt": "2026-03-04T23:13:01.660Z"
   },
   {
     "id": 18,
@@ -432,6 +449,7 @@
     "type": "Endorsed",
     "category": "Affordable Housing Development",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=4413&GAID=18&DocTypeID=HB&LegId=165058&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Dagmara Avelar",
     "lastAction": "To Tax Credit and Incentives Subcommittee",
@@ -441,8 +459,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:38.602Z",
-    "stageChangedAt": "2026-03-04T22:47:38.602Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.694Z",
+    "stageChangedAt": "2026-03-04T23:13:01.694Z"
   },
   {
     "id": 19,
@@ -456,6 +474,7 @@
     "type": "Endorsed",
     "category": "Affordable Housing Development",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=3169&GAID=18&DocTypeID=SB&LegId=165814&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Sen. Graciela Guzmán",
     "lastAction": "Assigned to Revenue",
@@ -465,8 +484,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:38.711Z",
-    "stageChangedAt": "2026-03-04T22:47:38.711Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.725Z",
+    "stageChangedAt": "2026-03-04T23:13:01.725Z"
   },
   {
     "id": 20,
@@ -480,6 +499,7 @@
     "type": "Endorsed",
     "category": "Zoning",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=4510&GAID=18&DocTypeID=HB&LegId=165295&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Jehan Gordon",
     "lastAction": "Referred to Rules Committee",
@@ -489,8 +509,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:38.831Z",
-    "stageChangedAt": "2026-03-04T22:47:38.831Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.761Z",
+    "stageChangedAt": "2026-03-04T23:13:01.761Z"
   },
   {
     "id": 21,
@@ -504,6 +524,7 @@
     "type": "Endorsed",
     "category": "Housing",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=4568&GAID=18&DocTypeID=HB&LegId=165428&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Lindsey LaPointe",
     "lastAction": "Added Co-Sponsor Rep. Abdelnasser Rashid",
@@ -513,8 +534,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:38.946Z",
-    "stageChangedAt": "2026-03-04T22:47:38.946Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.793Z",
+    "stageChangedAt": "2026-03-04T23:13:01.793Z"
   },
   {
     "id": 22,
@@ -528,6 +549,7 @@
     "type": "Endorsed",
     "category": "Housing",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=2969&GAID=18&DocTypeID=SB&LegId=165401&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Sen. Adriane Johnson",
     "lastAction": "Assigned to Appropriations- Health and Human Services",
@@ -537,8 +559,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:39.048Z",
-    "stageChangedAt": "2026-03-04T22:47:39.048Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.830Z",
+    "stageChangedAt": "2026-03-04T23:13:01.830Z"
   },
   {
     "id": 23,
@@ -552,6 +574,7 @@
     "type": "Endorsed",
     "category": "Housing",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=3165&GAID=18&DocTypeID=SB&LegId=165810&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Sen. Graciela Guzmán",
     "lastAction": "Assigned to Appropriations- Health and Human Services",
@@ -561,8 +584,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:39.148Z",
-    "stageChangedAt": "2026-03-04T22:47:39.148Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.871Z",
+    "stageChangedAt": "2026-03-04T23:13:01.871Z"
   },
   {
     "id": 24,
@@ -576,6 +599,7 @@
     "type": "Opposed",
     "category": "Zoning",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=4588&GAID=18&DocTypeID=HB&LegId=165448&SessionID=114",
+    "programArea": "Housing",
     "stage": "In House Committee",
     "primarySponsor": "Rep. Maura Hirschauer",
     "lastAction": "Assigned to Executive Committee",
@@ -585,8 +609,8 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:39.261Z",
-    "stageChangedAt": "2026-03-04T22:47:39.261Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.905Z",
+    "stageChangedAt": "2026-03-04T23:13:01.905Z"
   },
   {
     "id": 25,
@@ -600,6 +624,7 @@
     "type": "Endorsed",
     "category": "Housing",
     "url": "https://www.ilga.gov/Legislation/BillStatus?DocNum=3009&GAID=18&DocTypeID=SB&LegId=165513&SessionID=114",
+    "programArea": "Housing",
     "stage": "In Senate Committee",
     "primarySponsor": "Sen. Willie Preston",
     "lastAction": "Assigned to Appropriations",
@@ -609,7 +634,7 @@
     "lastAmendmentName": null,
     "lastAmendmentDate": null,
     "isShellBill": false,
-    "ilgaFetchedAt": "2026-03-04T22:47:39.351Z",
-    "stageChangedAt": "2026-03-04T22:47:39.351Z"
+    "ilgaFetchedAt": "2026-03-04T23:13:01.938Z",
+    "stageChangedAt": "2026-03-04T23:13:01.938Z"
   }
 ]
