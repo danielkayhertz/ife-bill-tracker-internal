@@ -11,8 +11,25 @@ export default {
       });
     }
 
-    // Proxy path: /github/repos/OWNER/REPO/contents/PATH
     const url = new URL(request.url);
+
+    // ILGA proxy: /ilga/ftp/legislation/...
+    if (url.pathname.startsWith('/ilga/')) {
+      const ilgaUrl = 'https://www.ilga.gov' + url.pathname.replace('/ilga', '') + url.search;
+      const resp = await fetch(ilgaUrl, {
+        headers: { 'User-Agent': 'IFE-BillTracker/1.0' },
+      });
+      const body = await resp.text();
+      return new Response(body, {
+        status: resp.status,
+        headers: {
+          'Content-Type': 'application/xml',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
+    // GitHub proxy: /github/repos/OWNER/REPO/contents/PATH
     const githubUrl = 'https://api.github.com' + url.pathname.replace('/github', '') + url.search;
 
     const resp = await fetch(githubUrl, {

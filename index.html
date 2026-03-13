@@ -1898,22 +1898,12 @@
       const docType = m[1], docNum = m[2].padStart(4, '0');
       const xmlUrl  = `https://www.ilga.gov/ftp/legislation/104/BillStatus/XML/10400${docType}${docNum}.xml`;
 
-      let text;
-      // Try direct fetch; fall back to CORS proxy if blocked
-      try {
-        const resp = await fetch(xmlUrl);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        text = await resp.text();
-      } catch (directErr) {
-        try {
-          const proxy = `https://corsproxy.io/?url=${encodeURIComponent(xmlUrl)}`;
-          const resp  = await fetch(proxy);
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          text = await resp.text();
-        } catch (proxyErr) {
-          throw new Error('Could not reach ILGA.gov. Fill in details manually — the daily update will populate ILGA fields automatically.');
-        }
-      }
+      const workerUrl = xmlUrl.replace('https://www.ilga.gov', `${WORKER_URL}/ilga`);
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 10000);
+      const resp = await fetch(workerUrl, { signal: ctrl.signal });
+      if (!resp.ok) throw new Error('Could not reach ILGA.gov. Fill in details manually — the daily update will populate ILGA fields automatically.');
+      const text = await resp.text();
 
       const xml = new DOMParser().parseFromString(text, 'text/xml');
       if (xml.querySelector('parsererror')) throw new Error('Bill not found or XML parse error.');
